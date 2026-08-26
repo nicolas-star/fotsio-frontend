@@ -1,0 +1,40 @@
+/*
+  typography.css
+  Scala tipografica fissa. Usa SOLO queste classi nei componenti,
+  mai font-size scritti a mano. Se un domani vuoi cambiare la scala
+  di tutta l'app, tocchi solo questo file.
+*/
+
+.testo1 {
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 34px;
+  color: var(--color-text);
+}
+
+.testo2 {
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 26px;
+  color: var(--color-text);
+}
+
+.testo3 {
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 20px;
+  color: var(--color-text);
+}
+
+.testo4 {
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 16px;
+  color: var(--color-text-muted);
+}
+
+/* Varianti "muted" pronte all'uso, per quando serve testo secondario
+   senza dover ogni volta aggiungere uno style inline */
+.testo1--muted { color: var(--color-text-muted); }
+.testo2--muted { color: var(--color-text-muted); }
+.testo3--muted { color: var(--color-text-muted); }

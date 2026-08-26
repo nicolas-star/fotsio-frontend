@@ -1,0 +1,45 @@
+/*
+  base.css
+  Reset minimo + regole di base, mobile-first.
+  Le variabili --color-* vengono impostate a runtime da store/theme.js
+*/
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+body {
+  font-family:
+    "Poppins",
+    "Inter",
+    system-ui,
+    -apple-system,
+    sans-serif;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
+}
+
+#app {
+  min-height: 100vh;
+  max-width: 480px; /* mobile-first: contenuto centrato anche da desktop */
+  margin: 0 auto;
+  position: relative;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font-family: inherit;
+}

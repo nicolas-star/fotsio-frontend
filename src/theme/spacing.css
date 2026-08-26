@@ -1,0 +1,19 @@
+/*
+  spacing.css
+  Scala di spaziature fissa, come variabili CSS.
+  Usale sempre al posto di valori px scritti a mano (padding: 16px -> padding: var(--space-md))
+*/
+
+:root {
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --space-xxl: 48px;
+
+  --radius-sm: 8px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-full: 999px;
+}

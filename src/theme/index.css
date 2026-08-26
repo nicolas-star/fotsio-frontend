@@ -1,0 +1,11 @@
+/*
+  index.css
+  Punto di ingresso unico per tutto il CSS del tema.
+  Import una volta sola in main.js, ordine importante:
+  spacing (variabili) -> base (reset) -> typography (classi testo)
+*/
+
+@import "./spacing.css";
+@import "./base.css";
+@import "./typography.css";
+@import "./colors.css";

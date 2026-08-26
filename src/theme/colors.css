@@ -1,0 +1,16 @@
+/*
+  colors.css
+  Colori semantici di stato (errore, successo, warning). A differenza di
+  --color-primary/--color-bg/ecc. (impostati a runtime da store/theme.js
+  in base a palette + modalita'), questi restano fissi: comunicano uno
+  stato e devono restare riconoscibili qualunque sia il tema attivo.
+*/
+
+:root {
+  --color-danger: #ff3b30;
+  --color-danger-soft: rgba(255, 59, 48, 0.12);
+  --color-success: #34c759;
+  --color-success-soft: rgba(52, 199, 89, 0.12);
+  --color-warning: #ff9500;
+  --color-warning-soft: rgba(255, 149, 0, 0.12);
+}
