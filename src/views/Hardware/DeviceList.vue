@@ -1,4 +1,4 @@
-<template>
+<!-- <template>
   <div class="page-container device-list-view">
     <header class="view-header slide-up">
       <router-link to="/" class="btn-back">←</router-link>
@@ -364,4 +364,4 @@ export default {
   box-shadow: 0 4px 12px rgba(255, 59, 48, 0.3);
   z-index: 1000;
 }
-</style>
+</style> -->
