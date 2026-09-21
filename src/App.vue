@@ -48,6 +48,7 @@ async function initUpdater() {
 	width: 100%;
 	min-height: 100vh;
 	padding-bottom: calc(70px + var(--safe-area-bottom, 0px) + var(--space-sm));
+	padding-top: 30px;
 }
 
 .fade-enter-active,

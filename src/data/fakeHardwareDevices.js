@@ -5,7 +5,6 @@ const devices = [
 		nome: "Soggiorno",
 		attivo: true,
 		position: 35,
-		slatsPosition: 60,
 		slatsOpen: false,
 	},
 	{
@@ -14,7 +13,6 @@ const devices = [
 		nome: "Cucina",
 		attivo: true,
 		position: 70,
-		slatsPosition: 40,
 		slatsOpen: false,
 	},
 	{
@@ -23,7 +21,6 @@ const devices = [
 		nome: "Camera",
 		attivo: true,
 		position: 20,
-		slatsPosition: 50,
 		slatsOpen: true,
 	},
 	{
@@ -32,7 +29,6 @@ const devices = [
 		nome: "Studio",
 		attivo: true,
 		position: 100,
-		slatsPosition: 45,
 		slatsOpen: false,
 	},
 ];

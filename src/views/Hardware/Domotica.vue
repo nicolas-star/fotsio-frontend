@@ -25,9 +25,9 @@
 						<strong>Sistema domotico</strong>
 						<span class="status-caption">Stato connessione tapparelle</span>
 					</div>
-					<n-tag :type="mqttConnected ? 'success' : 'error'">
-						{{ mqttConnected ? "Online" : "Offline" }}
-					</n-tag>
+					<n-tag :type="mqttConnected ? 'success' : 'error'">{{
+						mqttConnected ? "Online" : "Offline"
+					}}</n-tag>
 				</n-space>
 			</n-card>
 
@@ -57,7 +57,6 @@
 			<n-alert v-if="error" type="error" :show-icon="false">{{
 				error
 			}}</n-alert>
-
 			<n-space v-if="loading && !devices.length" vertical>
 				<n-skeleton
 					v-for="index in devices.length"
@@ -76,14 +75,11 @@
 					:class="['shutter-card', { inactive: !device.attivo }]"
 					@click="openDeviceSheet(device)">
 					<div class="shutter-card-content">
-						<div>
-							<strong>{{ device.nome || device.deviceId }}</strong>
-						</div>
+						<strong>{{ device.nome || device.deviceId }}</strong>
 						<span class="collapse-arrow" aria-hidden="true">
-							<n-icon  size="24" color="black">
-								<ChevronUp v-if="sheetOpen" />
-								<ChevronDown v-else />
-							</n-icon>
+							<n-icon size="24" color="black"
+								><ChevronUp v-if="sheetOpen" /><ChevronDown v-else
+							/></n-icon>
 						</span>
 					</div>
 				</n-card>
@@ -93,14 +89,15 @@
 		<n-drawer
 			v-model:show="sheetOpen"
 			placement="bottom"
-			:height="340"
+			:height="680"
 			:mask-closable="true">
 			<n-drawer-content closable>
 				<template #header>
 					<div class="sheet-title">
+						<span class="sheet-kicker">Controllo tapparella</span>
 						<strong>{{ selectedDevice?.nome || "Tapparella" }}</strong>
-						<span>{{
-							selectedDevice ? stateLabel(selectedDevice.coverState) : ""
+						<span class="sheet-status">{{
+							selectedDevice ? stateLabel(selectedDevice) : ""
 						}}</span>
 					</div>
 				</template>
@@ -132,8 +129,10 @@
 						size="large"
 						:loading="isBusy(selectedDevice, 'slats')"
 						:disabled="!canCommand(selectedDevice)"
-						@click="runCommand(selectedDevice, 'open_slats')"
-						>Fessure {{ selectedDevice.slatsPosition ?? 50 }}%</n-button
+						@click="
+							setPosition(selectedDevice, slatsPercentage(selectedDevice))
+						"
+						>Fessure {{ slatsPercentage(selectedDevice) }}%</n-button
 					>
 					<n-button
 						size="large"
@@ -174,6 +173,7 @@ import {
 	getAllCoverStatuses,
 	getHardwareDevices,
 	getHardwareStatus,
+	getSlatsPercentage,
 	openCoverSlats,
 	sendCoverCommand,
 	setCoverPosition,
@@ -292,12 +292,23 @@ export default {
 			}
 			return state === "open" || state === "closed" ? state : "unknown";
 		},
-		stateLabel(state) {
-			return STATE_LABELS[state] || STATE_LABELS.unknown;
+		stateLabel(device) {
+			const state = device?.coverState;
+			const label = STATE_LABELS[state] || STATE_LABELS.unknown;
+			if (state !== "partial" || !Number.isFinite(device?.position)) {
+				return label;
+			}
+			return `${label} (${device.position}%)`;
+		},
+		slatsPercentage(device) {
+			return getSlatsPercentage(device);
 		},
 		openDeviceSheet(device) {
 			this.selectedDevice = device;
 			this.sheetOpen = true;
+			if (typeof navigator !== "undefined" && "vibrate" in navigator) {
+				navigator.vibrate(15);
+			}
 		},
 		isBusy(device, action) {
 			return this.busyDevices.has(`${device.deviceId}:${action}`);
@@ -330,7 +341,7 @@ export default {
 				if (command === "open") device.position = 100;
 				if (command === "close") device.position = 0;
 				if (command === "open_slats")
-					device.position = device.slatsPosition ?? 50;
+					device.position = getSlatsPercentage(device);
 				device.coverState = this.normalizeCoverState(device.position, null);
 				this.scheduleStatusRefresh();
 			} catch (err) {
@@ -343,6 +354,12 @@ export default {
 			}
 		},
 		async setPosition(device, position) {
+			console.log(
+				"setPosition called with device:",
+				device,
+				"position:",
+				position,
+			);
 			if (!this.canCommand(device)) return;
 			this.markBusy(device, "position", true);
 			try {
@@ -419,8 +436,7 @@ export default {
 .shutter-card {
 	background: var(--color-card);
 }
-.status-caption,
-.sheet-title span {
+.status-caption {
 	display: block;
 	color: var(--color-text-muted);
 	font-size: 0.85rem;
@@ -460,21 +476,61 @@ export default {
 	color: var(--color-primary);
 	font-size: 1.5rem;
 }
+.sheet-title {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: var(--space-xs);
+}
+.sheet-kicker {
+	color: var(--color-text-muted);
+	font-size: 0.72rem;
+	font-weight: 700;
+	letter-spacing: 0.08em;
+	line-height: 1.2;
+	text-transform: uppercase;
+}
 .sheet-title strong {
 	display: block;
-	font-size: 1.1rem;
+	font-size: 1.3rem;
+	line-height: 1.2;
+}
+.sheet-status {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-sm);
+	margin-top: var(--space-sm);
+	padding: var(--space-sm) var(--space-sm);
+	border-radius: var(--radius-full);
+	background: var(--color-bg-soft);
+	color: var(--color-primary);
+	font-size: 0.8rem;
+	font-weight: 700;
+}
+.sheet-status::before {
+	width: 7px;
+	height: 7px;
+	border-radius: 50%;
+	background: var(--color-primary);
+	content: "";
+}
+:deep(.n-drawer-header) {
+	border-bottom: 1px solid var(--color-border);
+	padding: var(--space-lg) var(--space-md) var(--space-md);
+}
+:deep(.n-drawer-body-content) {
+	padding-top: var(--space-md);
 }
 .sheet-actions {
 	display: grid;
-	grid-template-columns: repeat(2, minmax(0, 1fr));
-	gap: var(--space-sm);
+	grid-template-columns: 1fr;
+	gap: var(--space-md);
 }
 .sheet-actions :deep(.n-button) {
 	min-height: 54px;
 }
 @media (max-width: 340px) {
-	.global-actions,
-	.sheet-actions {
+	.global-actions {
 		grid-template-columns: 1fr;
 	}
 }

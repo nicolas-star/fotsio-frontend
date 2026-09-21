@@ -67,6 +67,31 @@ import {
 } from "../data/fakeHardwareDevices";
 import { getFakeHardwareStatus } from "../data/fakeHardwareStatus";
 
+export const SLATS_CONFIG = [
+	{ name: "Tapparella Sala (Grande)", percentage: 17 },
+	{ name: "Tapparella Sala (Piccola)", percentage: 11 },
+	{ name: "Tapparella Camera", percentage: 50 },
+	{ name: "Tapparella Studio", percentage: 45 },
+];
+
+function normalizeDeviceName(name) {
+	return String(name ?? "")
+		.trim()
+		.toLowerCase()
+		.normalize("NFD")
+		.replace(/[\u0300-\u036f]/g, "");
+}
+
+export function getSlatsPercentage(device) {
+	console.log("getSlatsPercentage", device);
+	const deviceName = normalizeDeviceName(device?.nome);
+	return (
+		SLATS_CONFIG.find(
+			(config) => normalizeDeviceName(config.name) === deviceName,
+		)?.percentage ?? 50
+	);
+}
+
 export async function getHardwareStatus() {
 	if (BYPASS_AUTH) return getFakeHardwareStatus();
 	return http.get("/api/hardware/status");
@@ -95,7 +120,8 @@ function getFakeDeviceChanges(command, options) {
 		return { position: options.position, slatsOpen: false };
 	if (/^\d+$/.test(command))
 		return { position: Number(command), slatsOpen: options.slatsOpen ?? false };
-	if (command === "open_slats") return { slatsOpen: true };
+	if (command === "open_slats")
+		return { position: options.position, slatsOpen: true };
 	return {};
 }
 
@@ -121,8 +147,8 @@ export function setCoverPosition(device, percentage) {
 }
 
 export function openCoverSlats(device) {
-	const percentage = device.slatsPosition ?? 50;
-	return sendCoverCommand(device, String(percentage), {
+	const percentage = getSlatsPercentage(device);
+	return sendCoverCommand(device, "open_slats", {
 		position: percentage,
 		slatsOpen: true,
 	});

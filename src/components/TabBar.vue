@@ -47,11 +47,12 @@ export default {
 	bottom: 0;
 	left: 0;
 	right: 0;
-	height: calc(70px + var(--safe-area-bottom) + var(--space-sm));
+	height: calc(110px + var(--safe-area-bottom, 0px) + var(--space-sm));
 	display: flex;
 	justify-content: space-around;
 	align-items: center;
-	padding-bottom: calc(var(--safe-area-bottom) + var(--space-sm));
+	padding: var(--space-sm) var(--space-xs)
+		calc(var(--space-xl) + var(--safe-area-bottom, 0px));
 	border-top: 1px solid var(--color-border);
 	z-index: 1000;
 	background: var(--color-bg-soft);
@@ -64,8 +65,8 @@ export default {
 	text-decoration: none;
 	color: var(--color-text-muted);
 	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-	padding: 8px 12px;
-	border-radius: 16px;
+	padding: var(--space-sm) var(--space-xs);
+	border-radius: var(--radius-md);
 	flex: 1;
 }
 

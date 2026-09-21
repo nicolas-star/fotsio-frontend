@@ -162,11 +162,12 @@ async function handleLogout() {
 	align-items: center;
 	position: sticky;
 	top: 0;
-	z-index: 10;
+	z-index: 100;
 	padding: var(--space-sm) var(--space-md);
 	background: var(--color-bg);
 	width: 100%;
 	box-sizing: border-box;
+	isolation: isolate;
 }
 
 .header-col {
