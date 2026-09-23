@@ -1,7 +1,9 @@
+import { fetchWithRetry } from "./network";
+
 export async function checkAppVersion() {
     try {
         // Aggiungiamo un timestamp per evitare la cache del file version.json stesso
-        const response = await fetch('/version.json?t=' + Date.now(), {
+        const response = await fetchWithRetry('/version.json?t=' + Date.now(), {
             cache: 'no-store'
         });
         

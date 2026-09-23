@@ -1,6 +1,7 @@
 import { createApp } from "vue";
 import { createPinia } from "pinia";
 import "./theme/index.css";
+import "./pwa";
 import App from "./App.vue";
 import router from "./router";
 import { useAuthStore } from "./store/auth";
