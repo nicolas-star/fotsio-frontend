@@ -1,0 +1,6 @@
+.glass-surface {
+	background-color: var(--color-bg);
+	background-color: color-mix(in srgb, var(--color-bg) 82%, transparent);
+	-webkit-backdrop-filter: blur(18px) saturate(140%);
+	backdrop-filter: blur(18px) saturate(140%);
+}

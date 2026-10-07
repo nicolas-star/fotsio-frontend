@@ -135,7 +135,7 @@ Preferire Naive UI quando esiste un componente adatto:
 - `NForm`, `NFormItem`, `NInput` per i form;
 - `NButton` per le azioni;
 - `NAlert` per errori inline;
-- `NModal`, `NDialog`, `NSelect`, `NSwitch`, `NCheckbox` e componenti equivalenti quando servono.
+- `NModal`, `NDrawer`, `NDialog`, `NSelect`, `NSwitch`, `NCheckbox` e componenti equivalenti quando servono. Per flussi mobili di creazione o dettagli contestuali dal basso usare `BottomSheet.vue`, non una modale centrata.
 
 Usare `:loading`, `:disabled`, `attr-type="submit"` e le API native Naive UI invece di loader, input e button HTML personalizzati. Non aggiungere dipendenze se Naive UI copre gia' il caso.
 
@@ -147,11 +147,21 @@ Le viste importate da altri progetti devono usare Naive UI come sistema UI prede
 
 Usare il minor CSS custom possibile. Il CSS locale deve occuparsi soltanto di composizione, layout e dettagli che Naive UI non espone. Non ricreare con HTML/CSS controlli gia' disponibili in Naive UI: niente input, button, switch, loader, card o toast custom se esiste il componente equivalente.
 
+### Componenti UI riutilizzabili e CSS nelle viste
+
+- Le nuove viste non devono contenere blocchi `<style>` ne' CSS inline per definire il look dei controlli o dei pattern UI. La view compone componenti, passa dati e props, gestisce lo stato e gli eventi.
+- Se Naive UI non copre direttamente un pattern o serve una personalizzazione ripetuta, creare o estendere un componente presentazionale in `src/components/` basato su Naive UI. Il componente incapsula markup, accessibilita', varianti, layout e il CSS strettamente necessario; usa i token del tema e API tramite props/slot/eventi.
+- Gli stili trasversali e i token condivisi appartengono a `src/theme/`; gli stili specifici di un componente riutilizzabile restano nel suo file. Non duplicare lo stesso CSS tra viste.
+- I componenti UI non devono contenere chiamate API, decisioni `BYPASS_AUTH` o logica di dominio: queste responsabilita' restano a service/store e view.
+- CSS scoped in una view e' un'eccezione: solo composizione unica e non riutilizzabile che non possa essere ottenuta con componenti, props, slot o token esistenti; deve restare breve e non ridefinire controlli o pattern condivisi.
+- Prima di aggiungere CSS a una view, cercare un componente locale da riusare o migliorare. Non creare astrazioni generiche per un singolo dettaglio: estrarre pattern ricorrenti o UI complesse con una responsabilita' chiara.
+- Gli stili estesi presenti in viste legacy, inclusa `Domotica.vue`, sono debito tecnico: non copiarli. Quando quelle viste vengono modificate o rifatte, spostare i pattern riutilizzabili in componenti e ridurre la view a composizione e logica di presentazione.
+
 Non importare `http` direttamente nelle viste. Le viste devono chiamare store o service, che scelgono tra backend reale e dati demo in base a `BYPASS_AUTH`.
 
 ## Regole CSS e design
 
-Il progetto e' un'app mobile-first: ogni vista deve essere pensata prima per telefono. Dimensioni, font, spaziature, ordine dei contenuti, touch target, tastiera, overflow e safe area devono funzionare su schermi mobili stretti prima di essere adattati a desktop. `#app` ha larghezza massima di 480px. Il CSS locale deve essere minimo e mirato a layout o dettagli che Naive UI non copre.
+Il progetto e' un'app mobile-first: ogni vista deve essere pensata prima per telefono. Dimensioni, font, spaziature, ordine dei contenuti, touch target, tastiera, overflow e safe area devono funzionare su schermi mobili stretti prima di essere adattati a desktop. `#app` ha larghezza massima di 480px. Le nuove viste non definiscono CSS: personalizzazioni e pattern UI vanno nei componenti riutilizzabili basati su Naive UI; resta ammessa solo una minima regola scoped per composizione unica, secondo la sezione precedente.
 
 - Riutilizzare `spacing.css`, `typography.css`, `colors.css` e `base.css`.
 - Per la tipografia usare `.testo1`, `.testo2`, `.testo3`, `.testo4` e le varianti `--muted`.
@@ -163,7 +173,7 @@ Il progetto e' un'app mobile-first: ogni vista deve essere pensata prima per tel
 - Garantire testo leggibile, focus visibile, label associate ai controlli e layout senza sovrapposizioni.
 - Mantenere responsive il contenuto su mobile e desktop.
 - Non introdurre gradienti, animazioni o decorazioni se non servono all'esperienza e non sono gia' coerenti col tema.
-- Riservare spazio in fondo alle pagine per la `TabBar` fixed; non mettere questo padding nell'`Header`.
+- Riservare spazio in fondo alle pagine per la `TabBar` fixed; `App.vue` riserva l'altezza effettiva della barra (attualmente 110px), la safe area inferiore e un margine di scorrimento. `PageContent.vue` aggiunge il padding finale di pagina. Non mettere questo padding nell'`Header`.
 
 ## Fake data e operazioni demo
 
@@ -183,9 +193,19 @@ Ogni nuova vista che legge o modifica dati deve quindi avere un percorso demo es
 
 Usare `src/components/Header.vue` per l'intestazione delle viste. Il componente deve essere configurabile tramite props come `title`, `backTo`, `showBack` e `showLogout`, e tramite slot `start`/`end` per azioni specifiche.
 
-L'Header deve usare controlli Naive UI, delegare il logout a `useAuthStore`, navigare tramite Vue Router e restare sticky durante lo scroll. Il suo CSS deve limitarsi a `position: sticky`, safe area, z-index e layout indispensabile, usando i token del tema. `TabBar.vue` resta la barra di navigazione fixed inferiore e non deve essere duplicata nelle viste.
+Le quattro route primarie della `TabBar` (`/`, `/domotica`, `/spesa`, `/profile`) non mostrano la freccia indietro: la navigazione primaria e' gia' disponibile nella barra. Mantenere il supporto `showBack` per le pagine secondarie e i flussi interni.
+
+L'Header deve usare controlli Naive UI, delegare il logout a `useAuthStore`, navigare tramite Vue Router e mantenere lo stesso comportamento sticky e safe-area su tutte le pagine. Il suo CSS deve limitarsi a `position: sticky`, safe area, z-index e layout indispensabile, usando i token del tema. `TabBar.vue` resta la barra di navigazione fixed inferiore e non deve essere duplicata nelle viste.
 
 Header e TabBar non devono coprire il contenuto su mobile; verificare sempre padding, z-index e safe area.
+
+### BottomSheet condivisa
+
+Usare `src/components/BottomSheet.vue` per form e dettagli contestuali che su mobile devono aprirsi dal basso. Il componente si basa su `NDrawer` con `placement="bottom"` e accetta `v-model:show`, `title`, `subtitle`, `eyebrow`, `height`, `closable`, `maskClosable`, `contentPadding`, `contentBottomPadding`, `headerPadding`, `titleSize` e `haptic`; espone lo slot predefinito per il contenuto e gli slot `header` e `header-extra`. Usare un'altezza adattiva alla viewport e verificare schermi bassi e tastiera aperta.
+
+Backdrop, ombra, safe area e padding riutilizzabile restano nel componente. La vibrazione breve e' facoltativa, si abilita con `haptic` e deve essere protetta da feature detection e gestione dei browser che la bloccano. Non duplicare chiamate `navigator.vibrate()` nelle viste.
+
+Usare la BottomSheet sia per i controlli tapparella in Domotica sia per il form “Nuova spesa” in Finanze, mantenendo logica di dominio, loading e chiamate nei rispettivi service/store o viste responsabili.
 
 ### Snackbar
 
@@ -405,9 +425,11 @@ Endpoint e payload attualmente previsti:
 
 I fake module sono in `src/data/` e non devono essere importati dalle viste.
 
-- `fakeDashboard.js`: totali `totalRecurring`, `totalOther`,
-  `totalExpenses`.
+- `fakeDashboard.js`: totali demo `totalRecurring: 1560`, `totalOther: 625`,
+  `totalExpenses: 2185`; il totale deve essere la somma delle due voci.
 - `fakeRecurringExpenses.js`: array con `id`, `descrizione`, `importo`.
+  Gli importi iniziali del bypass devono sommare a `totalRecurring` del
+  dashboard; le aggiunte demo aggiornano la lista in memoria.
 - `fakeAddFamiglia.js` e `fakeAddUtenteFamiglia.js`: `{ result: true }`.
 - `fakeHardwareStatus.js`: `{ status: "connected" }`.
 - `fakeHardwareDevices.js`: quattro dispositivi persistenti in memoria con
@@ -434,14 +456,15 @@ Per ogni nuova fake API:
 - `JoinFamily.vue`: mostra scelta iniziale, poi unione con codice o creazione
   con nome/descrizione; controlla `{ result: true }` prima di `/`.
 - `Home.vue`: carica dashboard e ricorrenti tramite service, mostra skeleton,
-  totali in EUR, quick actions e agenda; errori persistenti in `NAlert`.
-- `Profile.vue`: mostra dati utente/famiglia e usa esclusivamente il theme
-  store per switch e selettore palette.
+  metriche con etichette complete, totali in EUR, quick actions e agenda vuota
+  finche' non esiste una fonte dati reale; non inserire eventi dimostrativi
+  hard-coded. Errori persistenti in `NAlert`.
+- `Profile.vue`: mostra una sola volta nome/email, dati famiglia e usa
+  esclusivamente il theme store per switch e selettore palette.
 - `Domotica.vue`: carica status e dispositivi, comandi singoli (`open`,
   `stop`, `close`, `position`, `open_slats`), comandi globali e Snackbar.
-- `ShoppingList.vue`: e' ancora una vista legacy: usa direttamente `http`,
-  controlli HTML e variabili CSS obsolete. Prima di estenderla va migrata a
-  service/fake API e Naive UI; non usare questo codice come modello.
+- `ShoppingList.vue`: usa Naive UI e `services/expenses.js`; “Nuova spesa” si
+  apre in `BottomSheet.vue`. Non importare direttamente `http` nella vista.
 - `DeviceList.vue`: e' legacy di riferimento e non va modificata durante la
   migrazione di Domotica.
 

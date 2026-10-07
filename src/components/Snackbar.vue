@@ -58,7 +58,7 @@ onBeforeUnmount(clearTimer);
   top: calc(var(--safe-area-top, 0px) + 64px);
   left: var(--space-md);
   right: var(--space-md);
-  z-index: 20;
+  z-index: 1000;
 }
 
 .snackbar-enter-active,

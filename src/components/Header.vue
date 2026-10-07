@@ -1,5 +1,5 @@
 <template>
-	<header class="app-header">
+	<header class="app-header glass-surface">
 		<!-- Colonna Sinistra -->
 		<div class="header-col left">
 			<slot name="start">
@@ -8,7 +8,9 @@
 					quaternary
 					aria-label="Indietro"
 					@click="handleBack">
-					←
+						<n-icon :size="20" aria-hidden="true">
+							<ArrowBackOutline />
+						</n-icon>
 				</n-button>
 			</slot>
 		</div>
@@ -25,9 +27,13 @@
 				<n-button
 					v-if="showLogout"
 					quaternary
+					circle
 					type="error"
+					aria-label="Esci"
 					@click="handleLogout">
-					Esci
+					<n-icon :size="20" aria-hidden="true">
+						<LogOutOutline />
+					</n-icon>
 				</n-button>
 			</slot>
 		</div>
@@ -35,9 +41,10 @@
 </template>
 
 <script setup>
-import { NButton } from "naive-ui";
+import { NButton, NIcon } from "naive-ui";
 import { useRouter } from "vue-router";
 import { useAuthStore } from "../store/auth";
+import { ArrowBackOutline, LogOutOutline } from "@vicons/ionicons5";
 
 const props = defineProps({
 	title: { type: String, required: true },
@@ -80,11 +87,14 @@ async function handleLogout() {
 	position: sticky;
 	top: 0;
 	z-index: 100;
-	padding: var(--space-sm) var(--space-md);
-	background: var(--color-bg);
+	margin-top: calc(-1 * var(--safe-area-top, 0px));
+	padding: calc(var(--space-sm) + var(--safe-area-top, 0px)) var(--space-md)
+		var(--space-sm);
+	border-bottom: 1px solid var(--color-border);
 	width: 100%;
 	box-sizing: border-box;
 	isolation: isolate;
+	min-height: calc(56px + var(--safe-area-top, 0px));
 }
 
 .header-col {

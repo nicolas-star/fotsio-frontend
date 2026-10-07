@@ -58,6 +58,27 @@ Non usare variabili storiche (`--color-background`, `--color-text-grey`,
 `NButton`, `NInput`, `NForm`, `NCard`, `NSwitch`, `NSelect`, `NAlert`,
 `NModal`, `NSkeleton`, `NEmpty` o componenti equivalenti.
 
+### Regola UI: viste sottili, componenti riutilizzabili
+
+Le nuove viste non devono contenere blocchi `<style>` o CSS inline per
+personalizzare l'interfaccia. Devono limitarsi a comporre componenti, collegare
+props/eventi e gestire lo stato di presentazione. Se Naive UI non basta o uno
+stesso pattern ricorre, creare o migliorare un componente presentazionale in
+`src/components/` usando Naive UI come base; il CSS specifico resta nel
+componente, mentre token e regole trasversali restano in `src/theme/`.
+
+I componenti riutilizzabili espongono props, slot ed eventi chiari e gestiscono
+accessibilita', varianti e layout del proprio pattern; non contengono richieste
+API, scelta bypass o logica di dominio. Evitare sia CSS duplicato nelle view,
+sia componenti generici creati per un singolo dettaglio senza riuso concreto.
+Una regola scoped in una view e' ammessa solo per una composizione davvero
+unica, non risolvibile con componenti o token esistenti, e deve restare minima.
+
+Il CSS esteso di `Domotica.vue` e' debito legacy, non un esempio da seguire.
+Quando si interviene su quella vista, valutare l'estrazione dei pattern
+condivisi in componenti e mantenere nella view solo composizione e logica di
+presentazione.
+
 `#app` e' mobile-first e limitato a 480px. Ogni pagina deve lasciare spazio
 alla `TabBar` fixed, rispettare safe area, focus visibile e target touch.
 `Header.vue` e' sticky; `Snackbar.vue` appare in alto sotto l'header.
@@ -138,12 +159,12 @@ delete aggiornare anche la collezione fake, mantenendo la forma del backend.
 1. Leggere store, router, service, tema e componenti locali.
 2. Definire forma backend e fake nella stessa struttura.
 3. Implementare la scelta `BYPASS_AUTH` nel service.
-4. Usare Naive UI e token CSS esistenti.
+4. Usare Naive UI e token CSS esistenti; comporre componenti riutilizzabili da `src/components/` invece di definire CSS nella view.
 5. Gestire loading, disabilitazione e prevenzione doppio submit.
 6. Propagare errori reali con fallback leggibile.
 7. Verificare bypass senza richieste HTTP e percorso reale con token.
 8. Eseguire `yarn build` e controllare diagnostiche/import.
-9. Verificare mobile, safe area, Header sticky e TabBar fixed.
+9. Verificare mobile, safe area, Header sticky e TabBar fixed; controllare che la view non abbia CSS duplicato o non necessario.
 
 ## 9. Debito tecnico noto
 

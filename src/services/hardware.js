@@ -8,10 +8,10 @@ import {
 import { getFakeHardwareStatus } from "../data/fakeHardwareStatus";
 
 export const SLATS_CONFIG = [
-  { name: "Tapparella Sala (Grande)", percentage: 17 },
-  { name: "Tapparella Sala (Piccola)", percentage: 11 },
-  { name: "Tapparella Camera", percentage: 50 },
-  { name: "Tapparella Studio", percentage: 45 },
+  { name: "Tapparella Sala (Grande)", percentage: 17, eveningAction: "close" },
+  { name: "Tapparella Sala (Piccola)", percentage: 11, eveningAction: "slats" },
+  { name: "Tapparella Camera", percentage: 50, eveningAction: "half" },
+  { name: "Tapparella Studio", percentage: 45, eveningAction: "close" },
 ];
 
 function normalizeDeviceName(name) {
@@ -92,6 +92,42 @@ export function openCoverSlats(device) {
     position: percentage,
     slatsOpen: true,
   });
+}
+
+export async function runEveningProgram(devices) {
+  const targets = SLATS_CONFIG.map((config) => {
+    const device = devices.find(
+      (candidate) =>
+        normalizeDeviceName(candidate.nome) ===
+        normalizeDeviceName(config.name),
+    );
+
+    return { config, device };
+  });
+
+  return Promise.allSettled(
+    targets.map(async ({ config, device }) => {
+      if (!device) throw new Error(`${config.name} non trovata`);
+      if (!device.attivo) throw new Error(`${config.name} non attiva`);
+
+      let response;
+      if (config.eveningAction === "slats") {
+        response = await openCoverSlats(device);
+      } else if (config.eveningAction === "half") {
+        response = await setCoverPosition(device, 50);
+      } else {
+        response = await sendCoverCommand(device, "close");
+      }
+
+      if (!response?.success) {
+        throw new Error(
+          response?.message || `Comando non riuscito per ${config.name}`,
+        );
+      }
+
+      return { success: true, device, config };
+    }),
+  );
 }
 
 function normalizeCoverState(position, state) {

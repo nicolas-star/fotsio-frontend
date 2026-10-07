@@ -1,76 +1,82 @@
 <template>
-  <div class="page-container home-view">
-    <Header :title="`Ciao, ${user?.nome || 'Utente'}`">
-      <template #end>
-        <router-link to="/profile" aria-label="Apri profilo">
-          <n-avatar round :size="40" color="var(--color-primary)">
-            {{ getInitials(user?.nome) }}
-          </n-avatar>
-        </router-link>
-      </template>
-    </Header>
+  <div class="home-view">
+    <Header title="Dashboard" subtitle="Riepilogo della tua casa" show-logout />
 
-    <n-alert v-if="error" type="error" :show-icon="false" class="feedback">
-      {{ error }}
-    </n-alert>
+    <PageContent>
+      <n-space vertical size="large">
+        <div class="home-intro">
+          <span class="testo4">{{ todayLabel }}</span>
+          <p class="testo2">Ciao, {{ user?.nome || "Utente" }}</p>
+        </div>
 
-    <n-space v-if="loading" vertical size="large">
-      <n-skeleton height="160px" sharp />
-      <n-skeleton height="100px" sharp />
-      <n-skeleton text :repeat="4" />
-    </n-space>
+        <n-alert v-if="error" type="error" :show-icon="false">
+          {{ error }}
+        </n-alert>
 
-    <n-space v-else vertical size="large">
-      <n-card title="Totale spese mensili" :bordered="false">
-        <p class="testo1">{{ formatCurrency(totalExpenses) }}</p>
-        <n-grid :cols="2" :x-gap="16">
-          <n-gi>
-            <p class="testo4">Ricorrenti</p>
-            <p class="testo2">{{ formatCurrency(totalRecurring) }}</p>
-          </n-gi>
-          <n-gi>
-            <p class="testo2">{{ formatCurrency(totalOther) }}</p>
-          </n-gi>
-        </n-grid>
-      </n-card>
+        <n-space v-if="loading" vertical size="large">
+          <n-skeleton height="220px" sharp />
+          <n-skeleton height="90px" sharp />
+          <n-skeleton height="150px" sharp />
+        </n-space>
 
-      <n-grid :cols="2" :x-gap="16">
-        <n-gi>
-          <n-button block @click="$router.push('/domotica')">Domotica</n-button>
-        </n-gi>
-        <n-gi>
-          <n-button block @click="$router.push('/spesa')">Finanze</n-button>
-        </n-gi>
-      </n-grid>
+        <template v-else>
+          <n-card class="summary-card" :bordered="false">
+            <span class="testo4">USCITE DEL MESE</span>
+            <p class="testo1 summary-total">{{ formatCurrency(totalExpenses) }}</p>
+            <div class="metric-grid">
+              <div class="metric-item">
+                <span class="testo4">Spese ricorrenti</span>
+                <strong class="testo3">{{ formatCurrency(totalRecurring) }}</strong>
+              </div>
+              <div class="metric-item">
+                <span class="testo4">Altre spese</span>
+                <strong class="testo3">{{ formatCurrency(totalOther) }}</strong>
+              </div>
+            </div>
+          </n-card>
 
-      <n-card title="Agenda di oggi" :bordered="false">
-        <n-list v-if="todayEvents.length" bordered>
-          <n-list-item v-for="event in todayEvents" :key="event.id">
-            <n-thing :title="event.title" :description="event.time" />
-          </n-list-item>
-        </n-list>
-        <n-empty v-else description="Nessun evento in programma" />
-      </n-card>
-    </n-space>
+          <div class="quick-actions">
+            <n-button type="primary" size="large" block @click="$router.push('/domotica')">
+              <template #icon><n-icon><HardwareChipOutline /></n-icon></template>
+              Domotica
+            </n-button>
+            <n-button size="large" block @click="$router.push('/spesa')">
+              <template #icon><n-icon><WalletOutline /></n-icon></template>
+              Finanze
+            </n-button>
+          </div>
+
+          <n-card :bordered="false">
+            <div class="section-heading">
+              <div>
+                <span class="testo4">{{ todayLabel }}</span>
+                <p class="testo3 section-title">Agenda</p>
+              </div>
+              <n-icon size="22" color="var(--color-primary)" aria-hidden="true">
+                <CalendarOutline />
+              </n-icon>
+            </div>
+            <n-empty description="Nessun evento in programma" />
+          </n-card>
+        </template>
+      </n-space>
+    </PageContent>
   </div>
 </template>
 
 <script>
 import {
   NAlert,
-  NAvatar,
   NButton,
   NCard,
   NEmpty,
-  NGi,
-  NGrid,
-  NList,
-  NListItem,
+  NIcon,
   NSkeleton,
   NSpace,
-  NThing,
 } from "naive-ui";
 import Header from "../components/Header.vue";
+import PageContent from "../components/PageContent.vue";
+import { CalendarOutline, HardwareChipOutline, WalletOutline } from "@vicons/ionicons5";
 import {
   fetchDashboard,
   fetchRecurringExpenses,
@@ -83,18 +89,17 @@ export default {
   name: "Home",
   components: {
     Header,
+    PageContent,
     NAlert,
-    NAvatar,
     NButton,
     NCard,
     NEmpty,
-    NGi,
-    NGrid,
-    NList,
-    NListItem,
+    NIcon,
     NSkeleton,
     NSpace,
-    NThing,
+    CalendarOutline,
+    HardwareChipOutline,
+    WalletOutline,
   },
   data() {
     return {
@@ -102,15 +107,17 @@ export default {
       speseRicorrenti: [],
       loading: true,
       error: null,
-      todayEvents: [
-        { id: 1, title: "Pranzo con cliente", time: "12:30" },
-        { id: 2, title: "Spesa supermercato", time: "18:00" },
-        { id: 3, title: "Palestra", time: "19:30" },
-      ],
     };
   },
   computed: {
     ...mapState(useAuthStore, ["user", "isAuthenticated"]),
+    todayLabel() {
+      return new Intl.DateTimeFormat("it-IT", {
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+      }).format(new Date());
+    },
     totalRecurring() {
       return Number(
         this.dashboardData?.totalRecurring ??
@@ -155,31 +162,53 @@ export default {
         currency: "EUR",
       }).format(value);
     },
-    getInitials(name) {
-      if (!name) return "U";
-      return name
-        .split(" ")
-        .map((part) => part[0])
-        .join("")
-        .toUpperCase()
-        .slice(0, 2);
-    },
   },
 };
 </script>
 
 <style scoped>
-.home-view {
-  padding: var(--space-md);
+  .home-intro p,
+  .summary-total,
+  .section-title {
+    margin: var(--space-xs) 0 0;
 }
 
-.feedback {
-  margin: 0 var(--space-md) var(--space-md);
+  .summary-total {
+    margin-top: var(--space-sm);
 }
 
-.testo1,
-.testo2,
-.testo4 {
-  margin-top: 0;
+  .metric-grid,
+  .quick-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-md);
+  }
+
+  .metric-grid {
+    margin-top: var(--space-lg);
+    padding-top: var(--space-md);
+    border-top: 1px solid var(--color-border);
+  }
+
+  .metric-item,
+  .section-heading {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+  }
+
+  .metric-item strong {
+    font-weight: 700;
+  }
+
+  .quick-actions :deep(.n-button) {
+    min-height: 56px;
+  }
+
+  .section-heading {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-md);
 }
 </style>

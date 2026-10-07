@@ -41,6 +41,13 @@ Preservare sempre:
 - `Header` sticky, `TabBar` fixed e spazio per safe area;
 - uso di Naive UI per alert, pulsanti, loading e messaggi.
 
+Per UI nuove o modificate mantenere le viste prive di CSS proprio: comporre
+Naive UI e componenti presentazionali riutilizzabili in `src/components/`.
+Le personalizzazioni stanno nel componente che le possiede o nei token/regole
+trasversali di `src/theme/`; nelle viste e' ammessa solo una minima regola di
+composizione unica non riutilizzabile. I componenti UI non assumono logica API,
+bypass o dominio. Non replicare il CSS legacy esteso di `Domotica.vue`.
+
 ## 1. Service worker e strategia cache
 
 ### File principale
@@ -418,6 +425,8 @@ yarn build
 - test da tastiera e focus visibile;
 - `Home.vue` supporta errori parziali;
 - `Domotica.vue` distingue successo completo, parziale e fallimento totale.
+- le viste modificate non introducono CSS per controlli/pattern condivisi e riusano componenti basati su Naive UI;
+- le personalizzazioni UI riutilizzabili hanno stili centralizzati nel componente o nel tema, senza duplicazioni tra viste.
 
 ### Bypass
 

@@ -1,33 +1,47 @@
 <template>
-	<nav v-if="showTabBar" class="tab-bar glass-effect">
+	<nav v-if="showTabBar" class="tab-bar glass-surface">
 		<router-link to="/" class="tab-item" active-class="active">
-			<span class="tab-icon">🏠</span>
+			<span class="tab-icon"><n-icon :size="22" aria-hidden="true"><HomeOutline /></n-icon></span>
 			<span class="tab-label">Home</span>
 		</router-link>
 
 		<router-link to="/domotica" class="tab-item" active-class="active">
-			<span class="tab-icon">🔌</span>
+			<span class="tab-icon"><n-icon :size="22" aria-hidden="true"><HardwareChipOutline /></n-icon></span>
 			<span class="tab-label">Domotica</span>
 		</router-link>
 
 		<router-link to="/spesa" class="tab-item" active-class="active">
-			<span class="tab-icon">💰</span>
+			<span class="tab-icon"><n-icon :size="22" aria-hidden="true"><WalletOutline /></n-icon></span>
 			<span class="tab-label">Finanze</span>
 		</router-link>
 
 		<router-link to="/profile" class="tab-item" active-class="active">
-			<span class="tab-icon">👤</span>
+			<span class="tab-icon"><n-icon :size="22" aria-hidden="true"><PersonOutline /></n-icon></span>
 			<span class="tab-label">Profilo</span>
 		</router-link>
 	</nav>
 </template>
 
 <script>
+import { NIcon } from "naive-ui";
 import { useAuthStore } from "../store/auth";
+import {
+	HomeOutline,
+	HardwareChipOutline,
+	WalletOutline,
+	PersonOutline,
+} from "@vicons/ionicons5";
 // Register e JoinFamily restano conservati ma non sono più route attive.
 
 export default {
 	name: "TabBar",
+	components: {
+		NIcon,
+		HomeOutline,
+		HardwareChipOutline,
+		WalletOutline,
+		PersonOutline,
+	},
 	computed: {
 		showTabBar() {
 			const authStore = useAuthStore();
@@ -55,7 +69,6 @@ export default {
 		calc(var(--space-xl) + var(--safe-area-bottom, 0px));
 	border-top: 1px solid var(--color-border);
 	z-index: 1000;
-	background: var(--color-bg-soft);
 }
 
 .tab-item {
@@ -72,8 +85,7 @@ export default {
 
 .tab-icon {
 	font-size: 22px;
-	margin-bottom: 4px;
-	filter: grayscale(1);
+	line-height: 1;
 	opacity: 0.7;
 }
 
@@ -81,7 +93,7 @@ export default {
 	font-size: 11px;
 	font-weight: 700;
 	text-transform: uppercase;
-	letter-spacing: 0.5px;
+	letter-spacing: 0;
 }
 
 .tab-item.active {
@@ -89,14 +101,8 @@ export default {
 }
 
 .tab-item.active .tab-icon {
-	filter: grayscale(0);
 	opacity: 1;
 	transform: translateY(-2px);
 }
 
-/* Glassmorphism adjustment for tab bar */
-.glass-effect {
-	backdrop-filter: blur(25px);
-	-webkit-backdrop-filter: blur(25px);
-}
 </style>

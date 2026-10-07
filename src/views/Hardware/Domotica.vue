@@ -1,10 +1,8 @@
 <template>
-	<div class="page-container domotica-view">
+	<div>
 		<Header
 			title="Domotica"
-			subtitle="Controlla le tapparelle"
-			back-to="/"
-			show-back>
+			subtitle="Controlla le tapparelle">
 			<template #end>
 				<n-button
 					quaternary
@@ -13,137 +11,35 @@
 					:loading="statusRefreshing"
 					:disabled="statusRefreshing || !devices.length"
 					@click="refreshCoverStatuses">
-					<span class="refresh-icon" aria-hidden="true">↻</span>
+					<template #icon><n-icon><RefreshOutline /></n-icon></template>
 				</n-button>
 			</template>
 		</Header>
 
-		<n-space vertical size="large" class="domotica-content">
-			<n-card :bordered="false" class="status-card">
-				<n-space justify="space-between" align="center">
-					<div>
-						<strong>Sistema domotico</strong>
-						<span class="status-caption">Stato connessione tapparelle</span>
-					</div>
-					<n-tag :type="mqttConnected ? 'success' : 'error'">{{
-						mqttConnected ? "Online" : "Offline"
-					}}</n-tag>
-				</n-space>
-			</n-card>
+		<PageContent>
+			<HardwareControlPanel
+			:mqtt-connected="mqttConnected"
+			:global-loading="globalLoading"
+			:active-device-count="activeDevices.length"
+			:has-busy-devices="busyDevices.size > 0"
+			:loading="loading"
+			:devices="devices"
+			:error="error"
+			@run-evening="runEvening"
+			@run-all="runAll"
+				@select-device="openDeviceSheet" />
+		</PageContent>
 
-			<div class="global-actions">
-				<n-button
-					type="primary"
-					size="large"
-					strong
-					:loading="globalLoading === 'open'"
-					:disabled="Boolean(globalLoading) || !activeDevices.length"
-					@click="runAll('open')">
-					<span class="action-symbol" aria-hidden="true">↑</span>
-					Apri tutto
-				</n-button>
-				<n-button
-					type="warning"
-					size="large"
-					strong
-					:loading="globalLoading === 'close'"
-					:disabled="Boolean(globalLoading) || !activeDevices.length"
-					@click="runAll('close')">
-					<span class="action-symbol" aria-hidden="true">↓</span>
-					Chiudi tutto
-				</n-button>
-			</div>
-
-			<n-alert v-if="error" type="error" :show-icon="false">{{
-				error
-			}}</n-alert>
-			<n-space v-if="loading && !devices.length" vertical>
-				<n-skeleton
-					v-for="index in devices.length"
-					:key="index"
-					height="72px"
-					sharp />
-			</n-space>
-			<n-empty
-				v-else-if="!devices.length"
-				description="Nessuna tapparella disponibile" />
-			<n-space v-else vertical size="small" class="device-list">
-				<n-card
-					v-for="device in devices"
-					:key="device.deviceId"
-					:bordered="false"
-					:class="['shutter-card', { inactive: !device.attivo }]"
-					@click="openDeviceSheet(device)">
-					<div class="shutter-card-content">
-						<strong>{{ device.nome || device.deviceId }}</strong>
-						<span class="collapse-arrow" aria-hidden="true">
-							<n-icon size="24" color="black"
-								><ChevronUp v-if="sheetOpen" /><ChevronDown v-else
-							/></n-icon>
-						</span>
-					</div>
-				</n-card>
-			</n-space>
-		</n-space>
-
-		<n-drawer
+		<CoverControlDrawer
 			v-model:show="sheetOpen"
-			placement="bottom"
-			:height="680"
-			:mask-closable="true">
-			<n-drawer-content closable>
-				<template #header>
-					<div class="sheet-title">
-						<span class="sheet-kicker">Controllo tapparella</span>
-						<strong>{{ selectedDevice?.nome || "Tapparella" }}</strong>
-						<span class="sheet-status">{{
-							selectedDevice ? stateLabel(selectedDevice) : ""
-						}}</span>
-					</div>
-				</template>
-				<div v-if="selectedDevice" class="sheet-actions">
-					<n-button
-						type="primary"
-						size="large"
-						:loading="isBusy(selectedDevice, 'open')"
-						:disabled="!canCommand(selectedDevice)"
-						@click="runCommand(selectedDevice, 'open')"
-						>Alza</n-button
-					>
-					<n-button
-						size="large"
-						:loading="isBusy(selectedDevice, 'stop')"
-						:disabled="!canCommand(selectedDevice)"
-						@click="runCommand(selectedDevice, 'stop')"
-						>Stop</n-button
-					>
-					<n-button
-						type="warning"
-						size="large"
-						:loading="isBusy(selectedDevice, 'close')"
-						:disabled="!canCommand(selectedDevice)"
-						@click="runCommand(selectedDevice, 'close')"
-						>Abbassa</n-button
-					>
-					<n-button
-						size="large"
-						:loading="isBusy(selectedDevice, 'slats')"
-						:disabled="!canCommand(selectedDevice)"
-						@click="
-							setPosition(selectedDevice, slatsPercentage(selectedDevice))
-						"
-						>Fessure {{ slatsPercentage(selectedDevice) }}%</n-button
-					>
-					<n-button
-						size="large"
-						:loading="isBusy(selectedDevice, 'position')"
-						:disabled="!canCommand(selectedDevice)"
-						@click="setPosition(selectedDevice, 50)"
-						>Apri al 50%</n-button
-					>
-				</div>
-			</n-drawer-content>
-		</n-drawer>
+			:device="selectedDevice"
+			height="min(78dvh, 640px)"
+			:state-label="selectedDevice ? stateLabel(selectedDevice) : ''"
+			:slats-percentage="selectedDevice ? slatsPercentage(selectedDevice) : 50"
+			:busy-actions="selectedBusyActions"
+			:can-command="selectedDevice ? canCommand(selectedDevice) : false"
+			@command="runCommand(selectedDevice, $event)"
+			@set-position="setPosition(selectedDevice, $event)" />
 
 		<Snackbar
 			:show="Boolean(snackbar.message)"
@@ -154,27 +50,20 @@
 </template>
 
 <script>
-import {
-	NAlert,
-	NButton,
-	NCard,
-	NDrawer,
-	NDrawerContent,
-	NEmpty,
-	NSkeleton,
-	NSpace,
-	NTag,
-	NIcon,
-} from "naive-ui";
-import { HomeOutline, ChevronDown, ChevronUp } from "@vicons/ionicons5";
+import { NButton, NIcon } from "naive-ui";
+import { RefreshOutline } from "@vicons/ionicons5";
 import Header from "../../components/Header.vue";
+import PageContent from "../../components/PageContent.vue";
 import Snackbar from "../../components/Snackbar.vue";
+import HardwareControlPanel from "../../components/hardware/HardwareControlPanel.vue";
+import CoverControlDrawer from "../../components/hardware/CoverControlDrawer.vue";
 import {
 	getAllCoverStatuses,
 	getHardwareDevices,
 	getHardwareStatus,
 	getSlatsPercentage,
 	openCoverSlats,
+	runEveningProgram,
 	sendCoverCommand,
 	setCoverPosition,
 } from "../../services/hardware";
@@ -191,20 +80,13 @@ export default {
 	name: "Domotica",
 	components: {
 		Header,
+		PageContent,
 		Snackbar,
-		NAlert,
+		HardwareControlPanel,
+		CoverControlDrawer,
 		NButton,
-		NCard,
-		NDrawer,
-		NDrawerContent,
-		NEmpty,
-		NSkeleton,
-		NSpace,
-		NTag,
 		NIcon,
-		HomeOutline,
-		ChevronUp,
-		ChevronDown,
+		RefreshOutline,
 	},
 	data() {
 		return {
@@ -225,6 +107,16 @@ export default {
 		activeDevices() {
 			return this.devices.filter((device) => device.attivo);
 		},
+		selectedBusyActions() {
+			if (!this.selectedDevice) return {};
+			return {
+				open: this.isBusy(this.selectedDevice, "open"),
+				stop: this.isBusy(this.selectedDevice, "stop"),
+				close: this.isBusy(this.selectedDevice, "close"),
+				slats: this.isBusy(this.selectedDevice, "slats"),
+				position: this.isBusy(this.selectedDevice, "position"),
+			};
+		},
 	},
 	async mounted() {
 		await this.loadHardware();
@@ -238,28 +130,41 @@ export default {
 		async loadHardware() {
 			this.loading = true;
 			this.error = "";
-			try {
-				const [status, response] = await Promise.all([
-					getHardwareStatus(),
-					getHardwareDevices(),
-				]);
-				this.mqttConnected = status?.status === "connected";
-				if (!response?.success)
-					throw new Error(response?.message || "Dispositivi non disponibili");
-				this.devices = response.devices || [];
-			} catch (err) {
-				this.error = err.message || "Errore caricamento domotica";
-				this.showSnackbar(this.error, "error");
-			} finally {
-				this.loading = false;
+			const [statusResult, devicesResult] = await Promise.allSettled([
+				getHardwareStatus(),
+				getHardwareDevices(),
+			]);
+			if (statusResult.status === "fulfilled") {
+				this.mqttConnected = statusResult.value?.status === "connected";
+			} else {
+				this.mqttConnected = false;
 			}
+			if (devicesResult.status === "fulfilled" && devicesResult.value?.success) {
+				this.devices = devicesResult.value.devices || [];
+			} else {
+				const message =
+					devicesResult.status === "rejected"
+						? devicesResult.reason?.message
+						: devicesResult.value?.message;
+				this.error = message || "Errore caricamento domotica";
+				this.showSnackbar(this.error, "error");
+			}
+			if (statusResult.status === "rejected") {
+				this.showSnackbar(
+					"Stato di connessione non disponibile",
+					"warning",
+				);
+			}
+			this.loading = false;
 		},
 		async refreshCoverStatuses() {
 			if (!this.devices.length || this.statusRefreshing) return;
 			this.statusRefreshing = true;
 			try {
 				const response = await getAllCoverStatuses();
-				if (!response?.success) return;
+				if (!response?.success) {
+					throw new Error(response?.message || "Stati tapparelle non disponibili");
+				}
 				const statusByKey = new Map(
 					(response.covers || []).map((cover) => [
 						`${cover.deviceId}:${cover.coverId ?? 0}`,
@@ -271,15 +176,19 @@ export default {
 						`${device.deviceId}:${device.coverId ?? 0}`,
 					);
 					if (!status) return;
-					if (Number.isFinite(status.currentPos) && status.currentPos >= 0)
+					if (Number.isFinite(status.currentPos) && status.currentPos >= 0) {
 						device.position = status.currentPos;
+					}
 					device.coverState = this.normalizeCoverState(
 						status.currentPos,
 						status.state,
 					);
 				});
 			} catch (err) {
-				console.error("Errore aggiornamento stato tapparelle", err);
+				this.showSnackbar(
+					err.message || "Errore aggiornamento stato tapparelle",
+					"error",
+				);
 			} finally {
 				this.statusRefreshing = false;
 			}
@@ -306,9 +215,6 @@ export default {
 		openDeviceSheet(device) {
 			this.selectedDevice = device;
 			this.sheetOpen = true;
-			if (typeof navigator !== "undefined" && "vibrate" in navigator) {
-				navigator.vibrate(15);
-			}
 		},
 		isBusy(device, action) {
 			return this.busyDevices.has(`${device.deviceId}:${action}`);
@@ -328,7 +234,7 @@ export default {
 			else this.busyDevices.delete(key);
 		},
 		async runCommand(device, command) {
-			if (!this.canCommand(device)) return;
+			if (!device || !this.canCommand(device)) return;
 			const action = command === "open_slats" ? "slats" : command;
 			this.markBusy(device, action, true);
 			try {
@@ -336,12 +242,17 @@ export default {
 					command === "open_slats"
 						? await openCoverSlats(device)
 						: await sendCoverCommand(device, command);
-				if (!response?.success)
+				if (!response?.success) {
 					throw new Error(response?.message || "Comando fallito");
+				}
 				if (command === "open") device.position = 100;
 				if (command === "close") device.position = 0;
-				if (command === "open_slats")
+				if (command === "open_slats") {
 					device.position = getSlatsPercentage(device);
+					device.slatsOpen = true;
+				} else if (command === "open" || command === "close") {
+					device.slatsOpen = false;
+				}
 				device.coverState = this.normalizeCoverState(device.position, null);
 				this.scheduleStatusRefresh();
 			} catch (err) {
@@ -354,19 +265,15 @@ export default {
 			}
 		},
 		async setPosition(device, position) {
-			console.log(
-				"setPosition called with device:",
-				device,
-				"position:",
-				position,
-			);
-			if (!this.canCommand(device)) return;
+			if (!device || !this.canCommand(device)) return;
 			this.markBusy(device, "position", true);
 			try {
 				const response = await setCoverPosition(device, position);
-				if (!response?.success)
+				if (!response?.success) {
 					throw new Error(response?.message || "Comando posizione fallito");
+				}
 				device.position = position;
+				device.slatsOpen = false;
 				device.coverState = this.normalizeCoverState(position, null);
 				this.scheduleStatusRefresh();
 			} catch (err) {
@@ -379,37 +286,81 @@ export default {
 			}
 		},
 		async runAll(command) {
-			if (this.globalLoading || !this.activeDevices.length) return;
+			if (this.globalLoading || this.busyDevices.size || !this.activeDevices.length) return;
 			this.globalLoading = command;
 			const devices = [...this.activeDevices];
-			const results = await Promise.allSettled(
-				devices.map((device) => sendCoverCommand(device, command)),
-			);
-			const failed = results.filter(
-				(result) => result.status === "rejected" || !result.value?.success,
-			);
-			results.forEach((result, index) => {
-				if (result.status === "fulfilled" && result.value?.success) {
-					devices[index].position = command === "open" ? 100 : 0;
-					devices[index].coverState = command === "open" ? "open" : "closed";
-				}
-			});
-			if (!failed.length)
-				this.showSnackbar(
-					command === "open"
-						? "Tutte le tapparelle sono aperte"
-						: "Tutte le tapparelle sono chiuse",
-					"success",
+			try {
+				const results = await Promise.allSettled(
+					devices.map((device) => sendCoverCommand(device, command)),
 				);
-			else if (failed.length === results.length)
-				this.showSnackbar("Nessuna tapparella ha eseguito il comando", "error");
-			else
+				const failed = results.filter(
+					(result) => result.status === "rejected" || !result.value?.success,
+				);
+				results.forEach((result, index) => {
+					if (result.status !== "fulfilled" || !result.value?.success) return;
+					devices[index].position = command === "open" ? 100 : 0;
+					devices[index].slatsOpen = false;
+					devices[index].coverState = command === "open" ? "open" : "closed";
+				});
+				this.showGlobalResult(
+					results.length,
+					failed.length,
+					command === "open" ? "Tutte le tapparelle sono aperte" : "Tutte le tapparelle sono chiuse",
+					"Nessuna tapparella ha eseguito il comando",
+					"tapparelle",
+				);
+				if (failed.length < results.length) this.scheduleStatusRefresh();
+			} finally {
+				this.globalLoading = null;
+			}
+		},
+		async runEvening() {
+			if (this.globalLoading || this.busyDevices.size || !this.devices.length) return;
+			this.globalLoading = "evening";
+			try {
+				const results = await runEveningProgram(this.devices);
+				const failed = results.filter(
+					(result) =>
+						result.status === "rejected" || !result.value?.success,
+				);
+				results.forEach((result) => {
+					if (result.status !== "fulfilled" || !result.value?.success) return;
+					const { device, config } = result.value;
+					if (config.eveningAction === "slats") {
+						device.position = getSlatsPercentage(device);
+						device.slatsOpen = true;
+					} else if (config.eveningAction === "half") {
+						device.position = 50;
+						device.slatsOpen = false;
+					} else {
+						device.position = 0;
+						device.slatsOpen = false;
+					}
+					device.coverState = this.normalizeCoverState(device.position, null);
+				});
+				this.showGlobalResult(
+					results.length,
+					failed.length,
+					"Programma serale completato",
+					"Il programma serale non è riuscito su alcuna tapparella",
+					"tapparelle",
+				);
+				if (failed.length < results.length) this.scheduleStatusRefresh();
+			} finally {
+				this.globalLoading = null;
+			}
+		},
+		showGlobalResult(total, failed, successMessage, failureMessage, subject) {
+			if (!failed) {
+				this.showSnackbar(successMessage, "success");
+			} else if (failed === total) {
+				this.showSnackbar(failureMessage, "error");
+			} else {
 				this.showSnackbar(
-					`${results.length - failed.length} tapparelle aggiornate, ${failed.length} non riuscite`,
+					`${total - failed} ${subject} aggiornate, ${failed} non riuscite`,
 					"warning",
 				);
-			this.globalLoading = null;
-			if (failed.length < results.length) this.scheduleStatusRefresh();
+			}
 		},
 		scheduleStatusRefresh() {
 			const timer = setTimeout(async () => {
@@ -424,114 +375,3 @@ export default {
 	},
 };
 </script>
-
-<style scoped>
-.domotica-view {
-	padding: var(--space-md) var(--space-md) var(--space-xl);
-}
-.domotica-content {
-	padding-top: var(--space-sm);
-}
-.status-card,
-.shutter-card {
-	background: var(--color-card);
-}
-.status-caption {
-	display: block;
-	color: var(--color-text-muted);
-	font-size: 0.85rem;
-}
-.global-actions {
-	display: grid;
-	grid-template-columns: repeat(2, minmax(0, 1fr));
-	gap: var(--space-sm);
-}
-.global-actions :deep(.n-button) {
-	min-height: 58px;
-}
-.action-symbol,
-.refresh-icon {
-	font-size: 1.25em;
-	line-height: 1;
-}
-.shutter-card {
-	cursor: pointer;
-	transition:
-		transform 0.18s ease,
-		background-color 0.18s ease;
-}
-.shutter-card:active {
-	transform: scale(0.985);
-}
-.shutter-card.inactive {
-	opacity: 0.6;
-}
-.shutter-card-content {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	min-height: 38px;
-}
-.collapse-arrow {
-	color: var(--color-primary);
-	font-size: 1.5rem;
-}
-.sheet-title {
-	display: flex;
-	flex-direction: column;
-	align-items: flex-start;
-	gap: var(--space-xs);
-}
-.sheet-kicker {
-	color: var(--color-text-muted);
-	font-size: 0.72rem;
-	font-weight: 700;
-	letter-spacing: 0.08em;
-	line-height: 1.2;
-	text-transform: uppercase;
-}
-.sheet-title strong {
-	display: block;
-	font-size: 1.3rem;
-	line-height: 1.2;
-}
-.sheet-status {
-	display: inline-flex;
-	align-items: center;
-	gap: var(--space-sm);
-	margin-top: var(--space-sm);
-	padding: var(--space-sm) var(--space-sm);
-	border-radius: var(--radius-full);
-	background: var(--color-bg-soft);
-	color: var(--color-primary);
-	font-size: 0.8rem;
-	font-weight: 700;
-}
-.sheet-status::before {
-	width: 7px;
-	height: 7px;
-	border-radius: 50%;
-	background: var(--color-primary);
-	content: "";
-}
-:deep(.n-drawer-header) {
-	border-bottom: 1px solid var(--color-border);
-	padding: var(--space-lg) var(--space-md) var(--space-md);
-}
-:deep(.n-drawer-body-content) {
-	padding-top: var(--space-md);
-}
-.sheet-actions {
-	display: grid;
-	grid-template-columns: 1fr;
-	gap: var(--space-md);
-}
-.sheet-actions :deep(.n-button) {
-	min-height: 54px;
-}
-@media (max-width: 340px) {
-	.global-actions {
-		grid-template-columns: 1fr;
-	}
-}
-</style>

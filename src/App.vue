@@ -66,8 +66,8 @@ function reloadApp() {
 #app-root {
 	width: 100%;
 	min-height: 100vh;
-	padding-bottom: calc(70px + var(--safe-area-bottom, 0px) + var(--space-sm));
-	padding-top: 30px;
+	padding-bottom: calc(110px + var(--safe-area-bottom, 0px) + var(--space-xl));
+	padding-top: var(--safe-area-top, 0px);
 }
 
 .global-network-error {
