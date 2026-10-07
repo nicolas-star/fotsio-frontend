@@ -66,8 +66,7 @@
 	</div>
 </template>
 
-<script setup>
-import { computed } from "vue";
+<script>
 import {
 	NAvatar,
 	NCard,
@@ -89,39 +88,72 @@ import { palettes } from "../theme/palettes";
 import { useAuthStore } from "../store/auth";
 import { useThemeStore } from "../store/theme";
 
-const authStore = useAuthStore();
-const themeStore = useThemeStore();
-const user = computed(() => authStore.user);
-const loading = computed(() => authStore.loading);
-const isDark = computed(() => themeStore.isDark);
-const mode = computed(() => themeStore.mode);
-const palette = computed(() => themeStore.palette);
-const palettePreference = computed(() => themeStore.palettePreference);
-const paletteOptions = computed(() => [
-	{ label: "CAMBIA SEMPRE", value: "always-random" },
-	...palettes[mode.value].map((item) => ({
-		label: item.name,
-		value: item.name,
-	})),
-]);
-
-function toggleMode() {
-	themeStore.toggleMode();
-}
-
-function setPalettePreference(preference) {
-	themeStore.setPalettePreference(preference);
-}
-
-function getInitials(name) {
-	if (!name) return "U";
-	return name
-		.split(" ")
-		.map((part) => part[0])
-		.join("")
-		.toUpperCase()
-		.slice(0, 2);
-}
+export default {
+	name: "Profile",
+	components: {
+		Header,
+		PageContent,
+		NAvatar,
+		NCard,
+		NDescriptions,
+		NDescriptionsItem,
+		NFormItem,
+		NIcon,
+		NSelect,
+		NSkeleton,
+		NSpace,
+		NSwitch,
+		NTag,
+		NText,
+		MoonOutline,
+	},
+	computed: {
+		user() {
+			return useAuthStore().user;
+		},
+		loading() {
+			return useAuthStore().loading;
+		},
+		isDark() {
+			return useThemeStore().isDark;
+		},
+		mode() {
+			return useThemeStore().mode;
+		},
+		palette() {
+			return useThemeStore().palette;
+		},
+		palettePreference() {
+			return useThemeStore().palettePreference;
+		},
+		paletteOptions() {
+			return [
+				{ label: "CAMBIA SEMPRE", value: "always-random" },
+				...palettes[this.mode].map((item) => ({
+					label: item.name,
+					value: item.name,
+				})),
+			];
+		},
+	},
+	methods: {
+		toggleMode() {
+			useThemeStore().toggleMode();
+		},
+		setPalettePreference(preference) {
+			useThemeStore().setPalettePreference(preference);
+		},
+		getInitials(name) {
+			if (!name) return "U";
+			return name
+				.split(" ")
+				.map((part) => part[0])
+				.join("")
+				.toUpperCase()
+				.slice(0, 2);
+		},
+	},
+};
 </script>
 
 <style scoped>

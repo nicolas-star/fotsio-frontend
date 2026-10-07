@@ -68,7 +68,7 @@
 	</n-space>
 </template>
 
-<script setup>
+<script>
 import {
 	NAlert,
 	NButton,
@@ -86,17 +86,33 @@ import {
 	MoonOutline,
 } from "@vicons/ionicons5";
 
-defineProps({
-	mqttConnected: { type: Boolean, default: false },
-	globalLoading: { type: String, default: null },
-	hasBusyDevices: { type: Boolean, default: false },
-	activeDeviceCount: { type: Number, default: 0 },
-	loading: { type: Boolean, default: false },
-	devices: { type: Array, default: () => [] },
-	error: { type: String, default: "" },
-});
-
-defineEmits(["run-evening", "run-all", "select-device"]);
+export default {
+	name: "HardwareControlPanel",
+	components: {
+		NAlert,
+		NButton,
+		NCard,
+		NEmpty,
+		NIcon,
+		NSkeleton,
+		NSpace,
+		NTag,
+		ArrowDownOutline,
+		ArrowUpOutline,
+		ChevronForwardOutline,
+		MoonOutline,
+	},
+	props: {
+		mqttConnected: { type: Boolean, default: false },
+		globalLoading: { type: String, default: null },
+		hasBusyDevices: { type: Boolean, default: false },
+		activeDeviceCount: { type: Number, default: 0 },
+		loading: { type: Boolean, default: false },
+		devices: { type: Array, default: () => [] },
+		error: { type: String, default: "" },
+	},
+	emits: ["run-evening", "run-all", "select-device"],
+};
 </script>
 
 <style scoped>

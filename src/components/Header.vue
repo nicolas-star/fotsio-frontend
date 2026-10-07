@@ -40,43 +40,48 @@
 	</header>
 </template>
 
-<script setup>
+<script>
 import { NButton, NIcon } from "naive-ui";
-import { useRouter } from "vue-router";
 import { useAuthStore } from "../store/auth";
 import { ArrowBackOutline, LogOutOutline } from "@vicons/ionicons5";
 
-const props = defineProps({
-	title: { type: String, required: true },
-	subtitle: { type: String, default: "" },
-	backTo: { type: [String, Object], default: null },
-	showBack: { type: Boolean, default: false },
-	showLogout: { type: Boolean, default: false },
-});
+export default {
+	name: "Header",
+	components: {
+		NButton,
+		NIcon,
+		ArrowBackOutline,
+		LogOutOutline,
+	},
+	props: {
+		title: { type: String, required: true },
+		subtitle: { type: String, default: "" },
+		backTo: { type: [String, Object], default: null },
+		showBack: { type: Boolean, default: false },
+		showLogout: { type: Boolean, default: false },
+	},
+	emits: ["back"],
+	methods: {
+		handleBack() {
+			if (this.backTo) {
+				this.$router.push(this.backTo);
+				return;
+			}
 
-const emit = defineEmits(["back"]);
-const router = useRouter();
-const authStore = useAuthStore();
+			if (window.history.length > 1) {
+				this.$router.back();
+			} else {
+				this.$router.push("/");
+			}
 
-function handleBack() {
-	if (props.backTo) {
-		router.push(props.backTo);
-		return;
-	}
-
-	if (window.history.length > 1) {
-		router.back();
-	} else {
-		router.push("/");
-	}
-
-	emit("back");
-}
-
-async function handleLogout() {
-	await authStore.logout();
-	router.push("/login");
-}
+			this.$emit("back");
+		},
+		async handleLogout() {
+			await useAuthStore().logout();
+			this.$router.push("/login");
+		},
+	},
+};
 </script>
 
 <style scoped>

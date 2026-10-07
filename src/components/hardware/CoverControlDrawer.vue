@@ -61,7 +61,7 @@
 	</BottomSheet>
 </template>
 
-<script setup>
+<script>
 import { NButton, NIcon } from "naive-ui";
 import BottomSheet from "../BottomSheet.vue";
 import {
@@ -72,20 +72,38 @@ import {
 	StopCircleOutline,
 } from "@vicons/ionicons5";
 
-defineProps({
-	show: { type: Boolean, default: false },
-	height: { type: [Number, String], default: "min(82dvh, 680px)" },
-	device: { type: Object, default: null },
-	stateLabel: { type: String, default: "" },
-	slatsPercentage: { type: Number, default: 50 },
-	busyActions: {
-		type: Object,
-		default: () => ({ open: false, stop: false, close: false, slats: false, position: false }),
+export default {
+	name: "CoverControlDrawer",
+	components: {
+		BottomSheet,
+		NButton,
+		NIcon,
+		ArrowDownOutline,
+		ArrowUpOutline,
+		EllipseOutline,
+		ResizeOutline,
+		StopCircleOutline,
 	},
-	canCommand: { type: Boolean, default: false },
-});
-
-defineEmits(["update:show", "command", "set-position"]);
+	props: {
+		show: { type: Boolean, default: false },
+		height: { type: [Number, String], default: "min(82dvh, 680px)" },
+		device: { type: Object, default: null },
+		stateLabel: { type: String, default: "" },
+		slatsPercentage: { type: Number, default: 50 },
+		busyActions: {
+			type: Object,
+			default: () => ({
+				open: false,
+				stop: false,
+				close: false,
+				slats: false,
+				position: false,
+			}),
+		},
+		canCommand: { type: Boolean, default: false },
+	},
+	emits: ["update:show", "command", "set-position"],
+};
 </script>
 
 <style scoped>

@@ -97,16 +97,10 @@
 			</n-form>
 		</BottomSheet>
 
-		<Snackbar
-			:show="Boolean(snackbar.message)"
-			:message="snackbar.message"
-			:type="snackbar.type"
-			@close="snackbar.message = ''" />
 	</div>
 </template>
 
-<script setup>
-import { computed, onMounted, ref } from "vue";
+<script>
 import {
 	NAlert,
 	NAvatar,
@@ -127,21 +121,9 @@ import { AddOutline, ReceiptOutline } from "@vicons/ionicons5";
 import Header from "../../components/Header.vue";
 import PageContent from "../../components/PageContent.vue";
 import BottomSheet from "../../components/BottomSheet.vue";
-import Snackbar from "../../components/Snackbar.vue";
 import { createRecurringExpense, listRecurringExpenses } from "../../services/expenses";
 import { useAuthStore } from "../../store/auth";
-
-const authStore = useAuthStore();
-const expenses = ref([]);
-const loading = ref(false);
-const saving = ref(false);
-const showAddModal = ref(false);
-const error = ref("");
-const snackbar = ref({ message: "", type: "info" });
-const form = ref(createEmptyExpense());
-const totalAmount = computed(() =>
-	expenses.value.reduce((sum, expense) => sum + Number(expense.importo || 0), 0),
-);
+import { notifyError, notifySuccess } from "../../services/notifications";
 
 function createEmptyExpense() {
 	return {
@@ -155,49 +137,88 @@ function createEmptyExpense() {
 	};
 }
 
-function formatCurrency(value) {
-	return new Intl.NumberFormat("it-IT", {
-		style: "currency",
-		currency: "EUR",
-	}).format(Number(value || 0));
-}
-
-function showMessage(message, type) {
-	snackbar.value = { message, type };
-}
-
-async function loadExpenses() {
-	loading.value = true;
-	error.value = "";
-	try {
-		expenses.value = await listRecurringExpenses(authStore.user);
-	} catch (loadError) {
-		error.value = loadError.message || "Errore caricamento finanze";
-	} finally {
-		loading.value = false;
-	}
-}
-
-async function saveExpense() {
-	if (saving.value || !form.value.nome.trim()) return;
-	saving.value = true;
-	error.value = "";
-	try {
-		await createRecurringExpense(authStore.user, {
-			...form.value,
-			nome: form.value.nome.trim(),
-			prezzo: Number(form.value.prezzo || 0),
-		});
-		showAddModal.value = false;
-		form.value = createEmptyExpense();
-		showMessage("Spesa salvata", "success");
-		await loadExpenses();
-	} catch (saveError) {
-		showMessage(saveError.message || "Errore salvataggio spesa", "error");
-	} finally {
-		saving.value = false;
-	}
-}
-
-onMounted(loadExpenses);
+export default {
+	name: "ShoppingList",
+	components: {
+		Header,
+		PageContent,
+		BottomSheet,
+		NAlert,
+		NAvatar,
+		NButton,
+		NCard,
+		NEmpty,
+		NForm,
+		NFormItem,
+		NIcon,
+		NInput,
+		NInputNumber,
+		NSkeleton,
+		NSpace,
+		NStatistic,
+		NText,
+		AddOutline,
+		ReceiptOutline,
+	},
+	data() {
+		return {
+			expenses: [],
+			loading: false,
+			saving: false,
+			showAddModal: false,
+			error: "",
+			form: createEmptyExpense(),
+		};
+	},
+	computed: {
+		totalAmount() {
+			return this.expenses.reduce(
+				(sum, expense) => sum + Number(expense.importo || 0),
+				0,
+			);
+		},
+	},
+	mounted() {
+		this.loadExpenses();
+	},
+	methods: {
+		formatCurrency(value) {
+			return new Intl.NumberFormat("it-IT", {
+				style: "currency",
+				currency: "EUR",
+			}).format(Number(value || 0));
+		},
+		async loadExpenses() {
+			this.loading = true;
+			this.error = "";
+			try {
+				this.expenses = await listRecurringExpenses(useAuthStore().user);
+			} catch (loadError) {
+				this.error = loadError.message || "Errore caricamento finanze";
+			} finally {
+				this.loading = false;
+			}
+		},
+		async saveExpense() {
+			if (this.saving || !this.form.nome.trim()) return;
+			this.saving = true;
+			this.error = "";
+			try {
+				await createRecurringExpense(useAuthStore().user, {
+					...this.form,
+					nome: this.form.nome.trim(),
+					prezzo: Number(this.form.prezzo || 0),
+				});
+				this.showAddModal = false;
+				this.form = createEmptyExpense();
+				notifySuccess("Spesa salvata");
+				await this.loadExpenses();
+			} catch (saveError) {
+				notifyError(saveError.message || "Errore salvataggio spesa");
+			} finally {
+				this.saving = false;
+			}
+		},
+	},
+};
 </script>

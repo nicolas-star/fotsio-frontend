@@ -27,45 +27,51 @@
 	</n-drawer>
 </template>
 
-<script setup>
-import { computed, watch } from "vue";
+<script>
 import { NDrawer, NDrawerContent } from "naive-ui";
 
-const props = defineProps({
-	show: { type: Boolean, default: false },
-	title: { type: String, default: "" },
-	subtitle: { type: String, default: "" },
-	eyebrow: { type: String, default: "" },
-	height: { type: [Number, String], default: "min(82dvh, 680px)" },
-	closable: { type: Boolean, default: true },
-	maskClosable: { type: Boolean, default: true },
-	contentPadding: { type: String, default: "var(--space-md)" },
-	contentBottomPadding: { type: String, default: "var(--space-lg)" },
-	headerPadding: { type: String, default: "var(--space-lg) var(--space-md) var(--space-md)" },
-	titleSize: { type: String, default: "var(--font-size-lg, 1.25rem)" },
-	haptic: { type: Boolean, default: false },
-});
-
-defineEmits(["update:show"]);
-
-const sheetStyle = computed(() => ({
-	"--sheet-content-padding": props.contentPadding,
-	"--sheet-content-bottom-padding": props.contentBottomPadding,
-	"--sheet-header-padding": props.headerPadding,
-	"--sheet-title-size": props.titleSize,
-}));
-
-watch(
-	() => props.show,
-	(isOpen) => {
-		if (!isOpen || !props.haptic || typeof navigator === "undefined") return;
-		try {
-			navigator.vibrate?.(15);
-		} catch {
-			// Haptics are optional and may be blocked by the browser.
-		}
+export default {
+	name: "BottomSheet",
+	components: { NDrawer, NDrawerContent },
+	props: {
+		show: { type: Boolean, default: false },
+		title: { type: String, default: "" },
+		subtitle: { type: String, default: "" },
+		eyebrow: { type: String, default: "" },
+		height: { type: [Number, String], default: "min(82dvh, 680px)" },
+		closable: { type: Boolean, default: true },
+		maskClosable: { type: Boolean, default: true },
+		contentPadding: { type: String, default: "var(--space-md)" },
+		contentBottomPadding: { type: String, default: "var(--space-lg)" },
+		headerPadding: {
+			type: String,
+			default: "var(--space-lg) var(--space-md) var(--space-md)",
+		},
+		titleSize: { type: String, default: "var(--font-size-lg, 1.25rem)" },
+		haptic: { type: Boolean, default: false },
 	},
-);
+	emits: ["update:show"],
+	computed: {
+		sheetStyle() {
+			return {
+				"--sheet-content-padding": this.contentPadding,
+				"--sheet-content-bottom-padding": this.contentBottomPadding,
+				"--sheet-header-padding": this.headerPadding,
+				"--sheet-title-size": this.titleSize,
+			};
+		},
+	},
+	watch: {
+		show(isOpen) {
+			if (!isOpen || !this.haptic || typeof navigator === "undefined") return;
+			try {
+				navigator.vibrate?.(15);
+			} catch {
+				// Haptics are optional and may be blocked by the browser.
+			}
+		},
+	},
+};
 </script>
 
 <style scoped>

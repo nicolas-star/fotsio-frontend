@@ -41,11 +41,6 @@
 			@command="runCommand(selectedDevice, $event)"
 			@set-position="setPosition(selectedDevice, $event)" />
 
-		<Snackbar
-			:show="Boolean(snackbar.message)"
-			:message="snackbar.message"
-			:type="snackbar.type"
-			@close="snackbar.message = ''" />
 	</div>
 </template>
 
@@ -54,9 +49,9 @@ import { NButton, NIcon } from "naive-ui";
 import { RefreshOutline } from "@vicons/ionicons5";
 import Header from "../../components/Header.vue";
 import PageContent from "../../components/PageContent.vue";
-import Snackbar from "../../components/Snackbar.vue";
 import HardwareControlPanel from "../../components/hardware/HardwareControlPanel.vue";
 import CoverControlDrawer from "../../components/hardware/CoverControlDrawer.vue";
+import { notifyError, notifySuccess, notifyWarning } from "../../services/notifications";
 import {
 	getAllCoverStatuses,
 	getHardwareDevices,
@@ -81,7 +76,6 @@ export default {
 	components: {
 		Header,
 		PageContent,
-		Snackbar,
 		HardwareControlPanel,
 		CoverControlDrawer,
 		NButton,
@@ -100,7 +94,6 @@ export default {
 			statusRefreshTimers: new Set(),
 			globalLoading: null,
 			error: "",
-			snackbar: { message: "", type: "info" },
 		};
 	},
 	computed: {
@@ -147,13 +140,10 @@ export default {
 						? devicesResult.reason?.message
 						: devicesResult.value?.message;
 				this.error = message || "Errore caricamento domotica";
-				this.showSnackbar(this.error, "error");
+				notifyError(this.error);
 			}
 			if (statusResult.status === "rejected") {
-				this.showSnackbar(
-					"Stato di connessione non disponibile",
-					"warning",
-				);
+				notifyWarning("Stato di connessione non disponibile");
 			}
 			this.loading = false;
 		},
@@ -185,10 +175,7 @@ export default {
 					);
 				});
 			} catch (err) {
-				this.showSnackbar(
-					err.message || "Errore aggiornamento stato tapparelle",
-					"error",
-				);
+				notifyError(err.message || "Errore aggiornamento stato tapparelle");
 			} finally {
 				this.statusRefreshing = false;
 			}
@@ -256,9 +243,8 @@ export default {
 				device.coverState = this.normalizeCoverState(device.position, null);
 				this.scheduleStatusRefresh();
 			} catch (err) {
-				this.showSnackbar(
+				notifyError(
 					`${device.nome || device.deviceId}: ${err.message || "Errore comunicazione dispositivo"}`,
-					"error",
 				);
 			} finally {
 				this.markBusy(device, action, false);
@@ -277,9 +263,8 @@ export default {
 				device.coverState = this.normalizeCoverState(position, null);
 				this.scheduleStatusRefresh();
 			} catch (err) {
-				this.showSnackbar(
+				notifyError(
 					`${device.nome || device.deviceId}: ${err.message || "Errore comunicazione dispositivo"}`,
-					"error",
 				);
 			} finally {
 				this.markBusy(device, "position", false);
@@ -352,13 +337,12 @@ export default {
 		},
 		showGlobalResult(total, failed, successMessage, failureMessage, subject) {
 			if (!failed) {
-				this.showSnackbar(successMessage, "success");
+				notifySuccess(successMessage);
 			} else if (failed === total) {
-				this.showSnackbar(failureMessage, "error");
+				notifyError(failureMessage);
 			} else {
-				this.showSnackbar(
+				notifyWarning(
 					`${total - failed} ${subject} aggiornate, ${failed} non riuscite`,
-					"warning",
 				);
 			}
 		},
@@ -368,9 +352,6 @@ export default {
 				await this.refreshCoverStatuses();
 			}, STATUS_REFRESH_DELAY_MS);
 			this.statusRefreshTimers.add(timer);
-		},
-		showSnackbar(message, type) {
-			this.snackbar = { message, type };
 		},
 	},
 };

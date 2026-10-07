@@ -1,37 +1,43 @@
-<script setup>
-import { computed, onMounted } from "vue";
+<script>
 import { NAlert, NButton, NConfigProvider } from "naive-ui";
 import { useThemeStore } from "./store/theme";
 import { checkAppVersion } from "./services/updater";
 import { clearNetworkFailure, networkFailure } from "./services/network";
 import TabBar from "./components/TabBar.vue";
+import Snackbar from "./components/Snackbar.vue";
 
-const themeStore = useThemeStore();
-
-// Overrides Naive UI ricalcolati automaticamente ogni volta che la palette
-// nello store cambia (getter reattivo -> computed).
-const naiveThemeOverrides = computed(() => themeStore.naiveThemeOverrides);
-
-onMounted(() => {
-	// Inizializza il tema (sceglie una palette random e la applica)
-	themeStore.applyTheme();
-
-	// Controlla aggiornamenti
-	initUpdater();
-});
-
-async function initUpdater() {
-	try {
-		await checkAppVersion();
-	} catch (error) {
-		console.error("Versione check fallito:", error);
-	}
-}
-
-function reloadApp() {
-  clearNetworkFailure();
-  window.location.reload();
-}
+export default {
+	name: "App",
+	components: { NAlert, NButton, NConfigProvider, TabBar, Snackbar },
+	data() {
+		return { themeStore: useThemeStore() };
+	},
+	computed: {
+		naiveThemeOverrides() {
+			return this.themeStore.naiveThemeOverrides;
+		},
+		networkFailure() {
+			return networkFailure.value;
+		},
+	},
+	mounted() {
+		this.themeStore.applyTheme();
+		this.initUpdater();
+	},
+	methods: {
+		async initUpdater() {
+			try {
+				await checkAppVersion();
+			} catch (error) {
+				console.error("Versione check fallito:", error);
+			}
+		},
+		reloadApp() {
+			clearNetworkFailure();
+			window.location.reload();
+		},
+	},
+};
 </script>
 
 <template>
@@ -52,6 +58,7 @@ function reloadApp() {
 					</n-button>
 				</div>
 			</n-alert>
+			<Snackbar />
 			<router-view v-slot="{ Component }">
 				<transition name="fade" mode="out-in">
 					<component :is="Component" />

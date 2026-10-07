@@ -145,6 +145,8 @@ Per `useMessage`, `useDialog`, `useNotification` e `useLoadingBar`, verificare p
 
 Le viste importate da altri progetti devono usare Naive UI come sistema UI predefinito. Preferire `NCard`, `NForm`, `NFormItem`, `NInput`, `NButton`, `NAlert`, `NSelect`, `NSwitch`, `NAvatar`, `NTag`, `NPageHeader`, `NGrid`, `NSkeleton`, `NEmpty` e `NThing` quando coprono il caso.
 
+Gli SFC Vue attivi devono usare Options API con `export default`, `name`, `components`, `props`, `emits` e le sezioni `data`, `computed`, `methods`/hook necessarie. Non aggiungere sezioni vuote per convenzione: i componenti senza logica restano componenti di solo template/stile. Le route commentate, i componenti legacy non montati e le copie archiviate sono fuori da questa regola finche' non vengono riattivati.
+
 Usare il minor CSS custom possibile. Il CSS locale deve occuparsi soltanto di composizione, layout e dettagli che Naive UI non espone. Non ricreare con HTML/CSS controlli gia' disponibili in Naive UI: niente input, button, switch, loader, card o toast custom se esiste il componente equivalente.
 
 ### Componenti UI riutilizzabili e CSS nelle viste
@@ -207,21 +209,18 @@ Backdrop, ombra, safe area e padding riutilizzabile restano nel componente. La v
 
 Usare la BottomSheet sia per i controlli tapparella in Domotica sia per il form “Nuova spesa” in Finanze, mantenendo logica di dominio, loading e chiamate nei rispettivi service/store o viste responsabili.
 
-### Snackbar
+### Notifiche globali
 
-Usare `src/components/Snackbar.vue` per i messaggi transitori. Il componente usa `NAlert` di Naive UI, viene importato localmente dalla vista che lo utilizza e non richiede `NMessageProvider`.
+`src/components/Snackbar.vue` e' un host unico montato in `App.vue`; non importarlo o montarlo nelle singole viste. Le notifiche sono create tramite helper importati da `src/services/notifications.js`:
 
-API prevista:
+- `notifyError(message, options?)` (durata predefinita 5000ms);
+- `notifySuccess(message, options?)` (2000ms);
+- `notifyWarning(message, options?)` e `notifyInfo(message, options?)` (3000ms);
+- `dismissNotification(id)` per chiudere programmaticamente una notifica.
 
-- `show`: visibilita' del messaggio;
-- `message`: testo;
-- `type`: `success`, `error`, `warning` o `info`;
-- `title`: titolo opzionale;
-- `duration`: chiusura automatica in millisecondi, `0` per non chiudere;
-- `closable`: abilita la chiusura manuale;
-- evento `close` quando il messaggio viene chiuso.
+Ogni notifica ha id indipendente, titolo opzionale, durata sovrascrivibile e chiusura facoltativa. I messaggi ravvicinati restano visibili insieme in uno stack ordinato per arrivo; timer e chiusura agiscono solo sul singolo messaggio. L'host usa `NAlert`, safe area, z-index e scroll interno su viewport basse e non richiede `NMessageProvider`/`NNotificationProvider`.
 
-Lo Snackbar deve comparire in alto, sotto l'area dell'Header e sopra il contenuto, mai in fondo vicino alla TabBar. Deve gestire internamente il proprio timer e usare safe area, z-index e larghezza mobile. Per errori persistenti dentro la pagina usare invece `NAlert` inline. Non creare toast custom, `alert()` o timer nelle viste.
+Usare `NAlert` inline per errori persistenti relativi al contenuto della pagina. Il banner di rete in `App.vue`, persistente e dotato dell'azione “Ricarica”, resta distinto dalle notifiche transitorie. Non creare toast custom, `alert()` o timer nelle viste.
 
 ## Toggle tema e palette
 
@@ -450,7 +449,7 @@ Per ogni nuova fake API:
 ### Pagine e responsabilita'
 
 - `Login.vue`: usa `NForm`, valida campi solo nel percorso reale, chiama
-  `authStore.login` e naviga a `/`; gli errori sono in `Snackbar`.
+  `authStore.login` e naviga a `/`; gli errori usano `notifyError`.
 - `Register.vue`: valida campi obbligatori nel percorso reale e conferma
   password sempre, chiama `signup` e naviga a `/`.
 - `JoinFamily.vue`: mostra scelta iniziale, poi unione con codice o creazione
@@ -462,9 +461,12 @@ Per ogni nuova fake API:
 - `Profile.vue`: mostra una sola volta nome/email, dati famiglia e usa
   esclusivamente il theme store per switch e selettore palette.
 - `Domotica.vue`: carica status e dispositivi, comandi singoli (`open`,
-  `stop`, `close`, `position`, `open_slats`), comandi globali e Snackbar.
+  `stop`, `close`, `position`, `open_slats`), comandi globali e helper notifica
+  globali (`notifyError`, `notifySuccess`, `notifyWarning`).
 - `ShoppingList.vue`: usa Naive UI e `services/expenses.js`; “Nuova spesa” si
-  apre in `BottomSheet.vue`. Non importare direttamente `http` nella vista.
+  apre in `BottomSheet.vue`; gli esiti usano `notifySuccess`/`notifyError` e gli
+  errori persistenti di caricamento restano inline. Non importare direttamente
+  `http` nella vista.
 - `DeviceList.vue`: e' legacy di riferimento e non va modificata durante la
   migrazione di Domotica.
 
@@ -487,7 +489,7 @@ I comandi posizione e fessure devono passare sempre da
 La vista deve disabilitare dispositivi non attivi e comandi concorrenti.
 `Apri tutto` e `Chiudi tutto` devono distinguere successo completo, parziale e
 fallimento totale, aggiornando solo i dispositivi riusciti e mostrando il
-risultato in `Snackbar`.
+risultato tramite helper di notifica globale.
 
 ### Regole di verifica prima della consegna
 
@@ -500,8 +502,10 @@ Eseguire almeno:
 4. verifica login, logout, refresh pagina, redirect auth/famiglia e ritorno
    dopo registrazione;
 5. verifica tema, persistenza di mode/palette e responsive mobile;
-6. verifica loading, submit da tastiera, errori inline/Snackbar e TabBar;
+6. verifica loading, submit da tastiera, errori inline/notifiche globali e TabBar;
 7. verifica Domotica: quattro tapparelle, comandi singoli, 50%, fessure,
    comandi globali e nessuna richiesta HTTP in bypass;
 8. con backend disponibile, ripetere il percorso con
    `VITE_BYPASS_AUTH=false` e verificare token/401/refresh.
+9. verificare notifiche simultanee in ordine d'arrivo, durate predefinite e
+  timer/chiusura indipendenti, scroll su viewport bassa e host unico in `App.vue`.

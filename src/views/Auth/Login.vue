@@ -48,27 +48,21 @@
 			</div>
 		</n-card>
 
-		<Snackbar
-			:show="Boolean(error)"
-			:message="error || ''"
-			type="error"
-			@close="error = null" />
 	</div>
 </template>
 
 <script>
 import { NButton, NCard, NForm, NFormItem, NInput } from "naive-ui";
-import Snackbar from "../../components/Snackbar.vue";
 import { useAuthStore } from "../../store/auth";
 import { mapState, mapActions } from "pinia";
+import { notifyError } from "../../services/notifications";
 
 export default {
 	name: "Login",
-	components: { NButton, NCard, NForm, NFormItem, NInput, Snackbar },
+	components: { NButton, NCard, NForm, NFormItem, NInput },
 	data() {
 		return {
 			form: { user: "", password: "" },
-			error: null,
 		};
 	},
 	computed: {
@@ -82,11 +76,10 @@ export default {
 		...mapActions(useAuthStore, ["login"]),
 		async handleLogin() {
 			if (!this.isBypassEnabled && (!this.form.user || !this.form.password)) {
-				this.error = "Inserisci credenziali complete";
+				notifyError("Inserisci credenziali complete");
 				return;
 			}
 
-			this.error = null;
 			try {
 				await this.login(this.form.user, this.form.password);
 				if (this.isAuthenticated) {
@@ -95,7 +88,7 @@ export default {
 			} catch (err) {
 				console.error("Login error:", err);
 				const detail = err.response?.data?.detail || "Credenziali non valide";
-				this.error = detail;
+				notifyError(detail);
 			}
 		},
 	},
