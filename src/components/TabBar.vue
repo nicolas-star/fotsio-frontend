@@ -1,23 +1,31 @@
 <template>
-	<nav v-if="showTabBar" class="tab-bar glass-surface">
+	<nav v-if="showTabBar" class="tab-bar">
 		<router-link to="/" class="tab-item" active-class="active">
-			<span class="tab-icon"><n-icon :size="22" aria-hidden="true"><HomeOutline /></n-icon></span>
-			<span class="tab-label">Home</span>
+			<span class="tab-icon"
+				><n-icon :size="28" aria-hidden="true"><HomeOutline /></n-icon
+			></span>
+			<!-- <span class="tab-label">Home</span> -->
 		</router-link>
 
 		<router-link to="/domotica" class="tab-item" active-class="active">
-			<span class="tab-icon"><n-icon :size="22" aria-hidden="true"><HardwareChipOutline /></n-icon></span>
-			<span class="tab-label">Domotica</span>
+			<span class="tab-icon"
+				><n-icon :size="28" aria-hidden="true"><HardwareChipOutline /></n-icon
+			></span>
+			<!-- <span class="tab-label">Domotica</span> -->
 		</router-link>
 
 		<router-link to="/spesa" class="tab-item" active-class="active">
-			<span class="tab-icon"><n-icon :size="22" aria-hidden="true"><WalletOutline /></n-icon></span>
-			<span class="tab-label">Finanze</span>
+			<span class="tab-icon"
+				><n-icon :size="28" aria-hidden="true"><WalletOutline /></n-icon
+			></span>
+			<!-- <span class="tab-label">Finanze</span> -->
 		</router-link>
 
 		<router-link to="/profile" class="tab-item" active-class="active">
-			<span class="tab-icon"><n-icon :size="22" aria-hidden="true"><PersonOutline /></n-icon></span>
-			<span class="tab-label">Profilo</span>
+			<span class="tab-icon"
+				><n-icon :size="28" aria-hidden="true"><PersonOutline /></n-icon
+			></span>
+			<!-- <span class="tab-label">Profilo</span>	 -->
 		</router-link>
 	</nav>
 </template>
@@ -59,16 +67,26 @@ export default {
 .tab-bar {
 	position: fixed;
 	bottom: 0;
-	left: 0;
-	right: 0;
-	height: calc(110px + var(--safe-area-bottom, 0px) + var(--space-sm));
+	left: 50%;
+	width: min(100%, 480px);
+	transform: translateX(-50%);
+	height: var(
+		--tab-bar-total-height,
+		calc(49px + var(--safe-area-bottom, 0px))
+	);
 	display: flex;
 	justify-content: space-around;
 	align-items: center;
-	padding: var(--space-sm) var(--space-xs)
-		calc(var(--space-xl) + var(--safe-area-bottom, 0px));
+
+	padding-top: var(--space-xl);
+	padding-right: max(var(--safe-area-right, 0px), var(--space-xs));
+	padding-bottom: var(--safe-area-bottom, 0px);
+	padding-left: max(var(--safe-area-left, 0px), var(--space-xs));
+
 	border-top: 1px solid var(--color-border);
 	z-index: 1000;
+	box-sizing: border-box;
+	background-color: var(--color-bg);
 }
 
 .tab-item {
@@ -78,20 +96,24 @@ export default {
 	text-decoration: none;
 	color: var(--color-text-muted);
 	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-	padding: var(--space-sm) var(--space-xs);
+	padding: 0 var(--space-xs);
 	border-radius: var(--radius-md);
 	flex: 1;
+	min-height: 44px;
+	justify-content: center;
+	gap: 2px;
 }
 
 .tab-icon {
-	font-size: 22px;
+	font-size: 24px;
 	line-height: 1;
 	opacity: 0.7;
 }
 
 .tab-label {
-	font-size: 11px;
+	font-size: 12px;
 	font-weight: 700;
+	line-height: 1;
 	text-transform: uppercase;
 	letter-spacing: 0;
 }
@@ -104,5 +126,4 @@ export default {
 	opacity: 1;
 	transform: translateY(-2px);
 }
-
 </style>

@@ -5,15 +5,15 @@
 */
 
 :root {
-  --space-xs: 4px;
-  --space-sm: 8px;
-  --space-md: 16px;
-  --space-lg: 24px;
-  --space-xl: 32px;
-  --space-xxl: 48px;
+	--space-xs: 4px;
+	--space-sm: 8px;
+	--space-md: 16px;
+	--space-lg: 24px;
+	--space-xl: 32px;
+	--space-xxl: 48px;
 
-  --radius-sm: 8px;
-  --radius-md: 16px;
-  --radius-lg: 24px;
-  --radius-full: 999px;
+	--radius-sm: 8px;
+	--radius-md: 16px;
+	--radius-lg: 24px;
+	--radius-full: 999px;
 }

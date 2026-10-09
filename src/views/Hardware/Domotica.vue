@@ -1,8 +1,6 @@
 <template>
 	<div>
-		<Header
-			title="Domotica"
-			subtitle="Controlla le tapparelle">
+		<Header title="Domotica" subtitle="Controlla le tapparelle">
 			<template #end>
 				<n-button
 					quaternary
@@ -11,22 +9,24 @@
 					:loading="statusRefreshing"
 					:disabled="statusRefreshing || !devices.length"
 					@click="refreshCoverStatuses">
-					<template #icon><n-icon><RefreshOutline /></n-icon></template>
+					<template #icon
+						><n-icon><RefreshOutline /></n-icon
+					></template>
 				</n-button>
 			</template>
 		</Header>
 
 		<PageContent>
 			<HardwareControlPanel
-			:mqtt-connected="mqttConnected"
-			:global-loading="globalLoading"
-			:active-device-count="activeDevices.length"
-			:has-busy-devices="busyDevices.size > 0"
-			:loading="loading"
-			:devices="devices"
-			:error="error"
-			@run-evening="runEvening"
-			@run-all="runAll"
+				:mqtt-connected="mqttConnected"
+				:global-loading="globalLoading"
+				:active-device-count="activeDevices.length"
+				:has-busy-devices="busyDevices.size > 0"
+				:loading="loading"
+				:devices="devices"
+				:error="error"
+				@run-evening="runEvening"
+				@run-all="runAll"
 				@select-device="openDeviceSheet" />
 		</PageContent>
 
@@ -40,7 +40,6 @@
 			:can-command="selectedDevice ? canCommand(selectedDevice) : false"
 			@command="runCommand(selectedDevice, $event)"
 			@set-position="setPosition(selectedDevice, $event)" />
-
 	</div>
 </template>
 
@@ -51,7 +50,11 @@ import Header from "../../components/Header.vue";
 import PageContent from "../../components/PageContent.vue";
 import HardwareControlPanel from "../../components/hardware/HardwareControlPanel.vue";
 import CoverControlDrawer from "../../components/hardware/CoverControlDrawer.vue";
-import { notifyError, notifySuccess, notifyWarning } from "../../services/notifications";
+import {
+	notifyError,
+	notifySuccess,
+	notifyWarning,
+} from "../../services/notifications";
 import {
 	getAllCoverStatuses,
 	getHardwareDevices,
@@ -132,7 +135,10 @@ export default {
 			} else {
 				this.mqttConnected = false;
 			}
-			if (devicesResult.status === "fulfilled" && devicesResult.value?.success) {
+			if (
+				devicesResult.status === "fulfilled" &&
+				devicesResult.value?.success
+			) {
 				this.devices = devicesResult.value.devices || [];
 			} else {
 				const message =
@@ -153,7 +159,9 @@ export default {
 			try {
 				const response = await getAllCoverStatuses();
 				if (!response?.success) {
-					throw new Error(response?.message || "Stati tapparelle non disponibili");
+					throw new Error(
+						response?.message || "Stati tapparelle non disponibili",
+					);
 				}
 				const statusByKey = new Map(
 					(response.covers || []).map((cover) => [
@@ -236,7 +244,7 @@ export default {
 				if (command === "close") device.position = 0;
 				if (command === "open_slats") {
 					device.position = getSlatsPercentage(device);
-					device.slatsOpen = true;
+					device.slatsOpen = false;
 				} else if (command === "open" || command === "close") {
 					device.slatsOpen = false;
 				}
@@ -271,7 +279,12 @@ export default {
 			}
 		},
 		async runAll(command) {
-			if (this.globalLoading || this.busyDevices.size || !this.activeDevices.length) return;
+			if (
+				this.globalLoading ||
+				this.busyDevices.size ||
+				!this.activeDevices.length
+			)
+				return;
 			this.globalLoading = command;
 			const devices = [...this.activeDevices];
 			try {
@@ -290,7 +303,9 @@ export default {
 				this.showGlobalResult(
 					results.length,
 					failed.length,
-					command === "open" ? "Tutte le tapparelle sono aperte" : "Tutte le tapparelle sono chiuse",
+					command === "open"
+						? "Tutte le tapparelle sono aperte"
+						: "Tutte le tapparelle sono chiuse",
 					"Nessuna tapparella ha eseguito il comando",
 					"tapparelle",
 				);
@@ -300,20 +315,21 @@ export default {
 			}
 		},
 		async runEvening() {
-			if (this.globalLoading || this.busyDevices.size || !this.devices.length) return;
+			if (this.globalLoading || this.busyDevices.size || !this.devices.length)
+				return;
 			this.globalLoading = "evening";
 			try {
 				const results = await runEveningProgram(this.devices);
+				console.log("Evening program results:", results);
 				const failed = results.filter(
-					(result) =>
-						result.status === "rejected" || !result.value?.success,
+					(result) => result.status === "rejected" || !result.value?.success,
 				);
 				results.forEach((result) => {
 					if (result.status !== "fulfilled" || !result.value?.success) return;
 					const { device, config } = result.value;
 					if (config.eveningAction === "slats") {
 						device.position = getSlatsPercentage(device);
-						device.slatsOpen = true;
+						device.slatsOpen = false;
 					} else if (config.eveningAction === "half") {
 						device.position = 50;
 						device.slatsOpen = false;

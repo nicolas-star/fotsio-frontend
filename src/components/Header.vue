@@ -1,5 +1,5 @@
 <template>
-	<header class="app-header glass-surface">
+	<header class="app-header">
 		<!-- Colonna Sinistra -->
 		<div class="header-col left">
 			<slot name="start">
@@ -8,9 +8,9 @@
 					quaternary
 					aria-label="Indietro"
 					@click="handleBack">
-						<n-icon :size="20" aria-hidden="true">
-							<ArrowBackOutline />
-						</n-icon>
+					<n-icon :size="20" aria-hidden="true">
+						<ArrowBackOutline />
+					</n-icon>
 				</n-button>
 			</slot>
 		</div>
@@ -92,14 +92,13 @@ export default {
 	position: sticky;
 	top: 0;
 	z-index: 100;
-	margin-top: calc(-1 * var(--safe-area-top, 0px));
-	padding: calc(var(--space-sm) + var(--safe-area-top, 0px)) var(--space-md)
-		var(--space-sm);
+	padding: var(--space-sm) var(--space-md);
 	border-bottom: 1px solid var(--color-border);
 	width: 100%;
 	box-sizing: border-box;
 	isolation: isolate;
-	min-height: calc(56px + var(--safe-area-top, 0px));
+	min-height: 56px;
+	background-color: var(--color-bg);
 }
 
 .header-col {

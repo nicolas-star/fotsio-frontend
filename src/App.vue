@@ -52,36 +52,79 @@ export default {
 				title="Connessione al server non riuscita"
 				:show-icon="true">
 				<div class="network-error-content">
-					<span>Controlla la connessione e tocca il pulsante per ricaricare.</span>
+					<span
+						>Controlla la connessione e tocca il pulsante per ricaricare.</span
+					>
 					<n-button size="small" type="error" secondary @click="reloadApp">
 						Ricarica
 					</n-button>
 				</div>
 			</n-alert>
 			<Snackbar />
-			<router-view v-slot="{ Component }">
-				<transition name="fade" mode="out-in">
-					<component :is="Component" />
-				</transition>
-			</router-view>
+			<div class="app-scroll-content">
+				<router-view v-slot="{ Component }">
+					<transition name="fade" mode="out-in">
+						<component :is="Component" />
+					</transition>
+				</router-view>
+			</div>
 			<TabBar />
 		</div>
 	</n-config-provider>
 </template>
 
 <style>
+:root {
+	--tab-bar-content-height: 49px;
+	--tab-bar-total-height: calc(
+		var(--tab-bar-content-height) + var(--safe-area-bottom, 0px)
+	);
+}
+
+html,
+body,
+#app {
+	height: 100%;
+	background-color: var(--color-bg);
+}
+
+#app {
+	overflow: hidden;
+}
+
 #app-root {
+	display: flex;
+	flex-direction: column;
 	width: 100%;
-	min-height: 100vh;
-	padding-bottom: calc(110px + var(--safe-area-bottom, 0px) + var(--space-xl));
-	padding-top: var(--safe-area-top, 0px);
+	height: 100vh;
+	height: 100dvh;
+	min-height: 0;
+	overflow: hidden;
+	background-color: var(--color-bg);
+	padding-inline: var(--safe-area-left) var(--safe-area-right);
+	padding-top: var(--safe-area-top);
+}
+
+.app-scroll-content {
+	flex: 1;
+	min-height: 0;
+	overflow-x: hidden;
+	overflow-y: auto;
+	overscroll-behavior-y: contain;
+	-webkit-overflow-scrolling: touch;
+	background-color: var(--color-bg);
+}
+
+.app-scroll-content > * {
+	min-height: 100%;
+	padding-bottom: calc(var(--tab-bar-total-height) + var(--space-xl));
 }
 
 .global-network-error {
 	position: fixed;
-	top: calc(var(--safe-area-top, 0px) + var(--space-md));
-	left: var(--space-md);
-	right: var(--space-md);
+	top: calc(var(--safe-area-top) + var(--space-md));
+	left: max(var(--safe-area-left), var(--space-md));
+	right: max(var(--safe-area-right), var(--space-md));
 	z-index: 1100;
 }
 
